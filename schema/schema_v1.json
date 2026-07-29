@@ -1,0 +1,578 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-emotional-companion:dialogue-sample:1.0",
+  "title": "AI 情感陪伴评测单条样本 Schema v1.0",
+  "description": "用于校验单条多轮对话评测样本。只定义用户、场景、对话和创作信息，不设置独立的陪伴载体人设字段；陪伴者身份可自然出现在故事背景和对话中。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "sample_id",
+    "revision",
+    "language",
+    "age_band",
+    "specific_age",
+    "scene_type",
+    "emotion_valence",
+    "history",
+    "target",
+    "authoring"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "description": "当前单条样本 schema 版本。"
+    },
+    "sample_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]{5,63}$",
+      "description": "全数据集唯一且稳定的样本 ID，只使用小写字母、数字、下划线和连字符。"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "样本内容修订号，从 1 开始。"
+    },
+    "language": {
+      "const": "zh-CN",
+      "description": "当前版本固定为简体中文。"
+    },
+    "age_band": {
+      "type": "string",
+      "enum": [
+        "preschool",
+        "primary_lower",
+        "primary_upper",
+        "middle_school",
+        "high_school",
+        "college",
+        "workplace"
+      ],
+      "description": "七层年龄/生活阶段标签。"
+    },
+    "specific_age": {
+      "type": "integer",
+      "minimum": 3,
+      "maximum": 35,
+      "description": "内部设定的具体年龄，用于检查语言和生活阶段是否适配。"
+    },
+    "scene_type": {
+      "type": "string",
+      "enum": [
+        "separation_loneliness",
+        "setback",
+        "social_conflict",
+        "family_pressure",
+        "loss",
+        "fear_anxiety",
+        "positive_sharing",
+        "achievement_recognition",
+        "deep_interest_like_minded",
+        "anticipation_surprise_gratitude",
+        "pretend_play_roleplay",
+        "bedtime_late_night",
+        "emotional_storm",
+        "affection_attention",
+        "secret_privacy",
+        "dependency_signal",
+        "relationship_replacement_exclusivity",
+        "hesitant_low_energy",
+        "farewell_separation",
+        "comfort_rejection",
+        "ai_rejection",
+        "emotional_blackmail",
+        "sarcasm_reality_check",
+        "guilt_repair",
+        "regret_counterfactual",
+        "jealousy_ambivalence",
+        "loyalty_conflict",
+        "moral_pressure_conformity",
+        "forgiveness_repair",
+        "emptiness_boredom",
+        "mixed_transition",
+        "caregiving_ambivalence",
+        "body_change_shame",
+        "sensory_neurodiversity",
+        "holiday_memory_trigger",
+        "calm_companionship",
+        "everyday_connection",
+        "playful_interaction",
+        "curiosity_exploration",
+        "growth_ambivalence",
+        "restart_uncertainty",
+        "closeness_boundary"
+      ],
+      "description": "样本的主要场景类型，只能选择一个主场景。"
+    },
+    "emotion_valence": {
+      "type": "string",
+      "enum": [
+        "positive",
+        "negative",
+        "mixed",
+        "neutral"
+      ],
+      "description": "按最后一条 user 消息标注的主导情绪极性。"
+    },
+    "history": {
+      "description": "6–12 条 user/supporter 严格交替的上下文，最后一条必须为 user。偶数长度允许从 supporter 开始，表示截取自更长对话。",
+      "oneOf": [
+        {
+          "type": "array",
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/supporterTurn"
+            },
+            {
+              "$ref": "#/$defs/userTurn"
+            },
+            {
+              "$ref": "#/$defs/supporterTurn"
+            },
+            {
+              "$ref": "#/$defs/userTurn"
+            },
+            {
+              "$ref": "#/$defs/supporterTurn"
+            },
+            {
+              "$ref": "#/$defs/userTurn"
+            }
+          ],
+          "items": false,
+          "minItems": 6,
+          "maxItems": 6
+        },
+        {
+          "type": "array",
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/userTurn"
+            },
+            {
+              "$ref": "#/$defs/supporterTurn"
+            },
+            {
+              "$ref": "#/$defs/userTurn"
+            },
+            {
+              "$ref": "#/$defs/supporterTurn"
+            },
+            {
+              "$ref": "#/$defs/userTurn"
+            },
+            {
+              "$ref": "#/$defs/supporterTurn"
+            },
+            {
+              "$ref": "#/$defs/userTurn"
+            }
+          ],
+          "items": false,
+          "minItems": 7,
+          "maxItems": 7
+        },
+        {
+          "type": "array",
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/supporterTurn"
+            },
+            {
+              "$ref": "#/$defs/userTurn"
+            },
+            {
+              "$ref": "#/$defs/supporterTurn"
+            },
+            {
+              "$ref": "#/$defs/userTurn"
+            },
+            {
+              "$ref": "#/$defs/supporterTurn"
+            },
+            {
+              "$ref": "#/$defs/userTurn"
+            },
+            {
+              "$ref": "#/$defs/supporterTurn"
+            },
+            {
+              "$ref": "#/$defs/userTurn"
+            }
+          ],
+          "items": false,
+          "minItems": 8,
+          "maxItems": 8
+        },
+        {
+          "type": "array",
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/userTurn"
+            },
+            {
+              "$ref": "#/$defs/supporterTurn"
+            },
+            {
+              "$ref": "#/$defs/userTurn"
+            },
+            {
+              "$ref": "#/$defs/supporterTurn"
+            },
+            {
+              "$ref": "#/$defs/userTurn"
+            },
+            {
+              "$ref": "#/$defs/supporterTurn"
+            },
+            {
+              "$ref": "#/$defs/userTurn"
+            },
+            {
+              "$ref": "#/$defs/supporterTurn"
+            },
+            {
+              "$ref": "#/$defs/userTurn"
+            }
+          ],
+          "items": false,
+          "minItems": 9,
+          "maxItems": 9
+        },
+        {
+          "type": "array",
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/supporterTurn"
+            },
+            {
+              "$ref": "#/$defs/userTurn"
+            },
+            {
+              "$ref": "#/$defs/supporterTurn"
+            },
+            {
+              "$ref": "#/$defs/userTurn"
+            },
+            {
+              "$ref": "#/$defs/supporterTurn"
+            },
+            {
+              "$ref": "#/$defs/userTurn"
+            },
+            {
+              "$ref": "#/$defs/supporterTurn"
+            },
+            {
+              "$ref": "#/$defs/userTurn"
+            },
+            {
+              "$ref": "#/$defs/supporterTurn"
+            },
+            {
+              "$ref": "#/$defs/userTurn"
+            }
+          ],
+          "items": false,
+          "minItems": 10,
+          "maxItems": 10
+        },
+        {
+          "type": "array",
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/userTurn"
+            },
+            {
+              "$ref": "#/$defs/supporterTurn"
+            },
+            {
+              "$ref": "#/$defs/userTurn"
+            },
+            {
+              "$ref": "#/$defs/supporterTurn"
+            },
+            {
+              "$ref": "#/$defs/userTurn"
+            },
+            {
+              "$ref": "#/$defs/supporterTurn"
+            },
+            {
+              "$ref": "#/$defs/userTurn"
+            },
+            {
+              "$ref": "#/$defs/supporterTurn"
+            },
+            {
+              "$ref": "#/$defs/userTurn"
+            },
+            {
+              "$ref": "#/$defs/supporterTurn"
+            },
+            {
+              "$ref": "#/$defs/userTurn"
+            }
+          ],
+          "items": false,
+          "minItems": 11,
+          "maxItems": 11
+        },
+        {
+          "type": "array",
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/supporterTurn"
+            },
+            {
+              "$ref": "#/$defs/userTurn"
+            },
+            {
+              "$ref": "#/$defs/supporterTurn"
+            },
+            {
+              "$ref": "#/$defs/userTurn"
+            },
+            {
+              "$ref": "#/$defs/supporterTurn"
+            },
+            {
+              "$ref": "#/$defs/userTurn"
+            },
+            {
+              "$ref": "#/$defs/supporterTurn"
+            },
+            {
+              "$ref": "#/$defs/userTurn"
+            },
+            {
+              "$ref": "#/$defs/supporterTurn"
+            },
+            {
+              "$ref": "#/$defs/userTurn"
+            },
+            {
+              "$ref": "#/$defs/supporterTurn"
+            },
+            {
+              "$ref": "#/$defs/userTurn"
+            }
+          ],
+          "items": false,
+          "minItems": 12,
+          "maxItems": 12
+        }
+      ]
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "min_sentences",
+        "max_sentences",
+        "max_chars"
+      ],
+      "properties": {
+        "role": {
+          "const": "supporter"
+        },
+        "min_sentences": {
+          "const": 1
+        },
+        "max_sentences": {
+          "const": 3
+        },
+        "max_chars": {
+          "const": 40
+        }
+      },
+      "description": "所有样本统一的待补全目标，不包含具体参考答案。"
+    },
+    "authoring": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "situation_summary",
+        "context_dependencies",
+        "valid_response_directions",
+        "forbidden_response_patterns",
+        "human_only",
+        "review_status"
+      ],
+      "properties": {
+        "situation_summary": {
+          "type": "string",
+          "minLength": 600,
+          "maxLength": 1500,
+          "description": "写在 history 上方的详细自然语言背景故事，以 AI 玩具长短期记忆的方式交代用户、关系、共同记忆、近期变化和事件当天细节，不写成 prompt 或机械标签。"
+        },
+        "context_dependencies": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100
+          },
+          "minItems": 1,
+          "maxItems": 5,
+          "uniqueItems": true,
+          "description": "回答时至少应注意的一项前文信息。"
+        },
+        "valid_response_directions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100
+          },
+          "minItems": 2,
+          "maxItems": 5,
+          "uniqueItems": true,
+          "description": "至少两种合理回应方向，用于保证不是唯一答案题。"
+        },
+        "forbidden_response_patterns": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100
+          },
+          "minItems": 1,
+          "maxItems": 8,
+          "uniqueItems": true
+        },
+        "human_only": {
+          "type": "boolean",
+          "description": "安全红线样本必须为 true。"
+        },
+        "review_status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "first_review",
+            "double_reviewed",
+            "approved"
+          ]
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 500
+        }
+      },
+      "description": "内部创作与质检信息，不进入模型输入。"
+    }
+  },
+  "$defs": {
+    "userTurn": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "content"
+      ],
+      "properties": {
+        "role": {
+          "const": "user"
+        },
+        "content": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        }
+      }
+    },
+    "supporterTurn": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "content"
+      ],
+      "properties": {
+        "role": {
+          "const": "supporter"
+        },
+        "content": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "scene_type": {
+            "const": "secret_privacy"
+          }
+        },
+        "required": [
+          "scene_type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "authoring": {
+            "type": "object",
+            "properties": {
+              "human_only": {
+                "const": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "scene_type": {
+            "const": "dependency_signal"
+          }
+        },
+        "required": [
+          "scene_type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "authoring": {
+            "type": "object",
+            "properties": {
+              "human_only": {
+                "const": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "scene_type": {
+            "const": "relationship_replacement_exclusivity"
+          }
+        },
+        "required": [
+          "scene_type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "authoring": {
+            "type": "object",
+            "properties": {
+              "human_only": {
+                "const": true
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

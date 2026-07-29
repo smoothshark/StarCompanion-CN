@@ -1,0 +1,3574 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>情感陪伴对话数据集构造工具</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Figtree:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #e8eef5;
+      --panel: rgba(255, 252, 250, 0.78);
+      --panel-solid: #f7f5f8;
+      --ink: #243039;
+      --muted: #5d6b78;
+      --line: rgba(255, 255, 255, 0.55);
+      --line-soft: rgba(36, 48, 57, 0.1);
+      --accent: #3d7a7a;
+      --accent-deep: #2f5f5f;
+      --accent-soft: rgba(61, 122, 122, 0.14);
+      --rose: #c97b8e;
+      --lilac: #8b7aa8;
+      --peach: #d4a07a;
+      --sky: #6a9bb8;
+      --mint: #6aa896;
+      --warn: #a06a28;
+      --warn-bg: rgba(212, 160, 122, 0.22);
+      --err: #a04555;
+      --err-bg: rgba(201, 123, 142, 0.2);
+      --ok: #2f7a5c;
+      --ok-bg: rgba(106, 168, 150, 0.22);
+      --user: rgba(106, 155, 184, 0.16);
+      --supporter: rgba(201, 123, 142, 0.12);
+      --shadow: 0 12px 40px rgba(60, 70, 90, 0.1), 0 2px 8px rgba(60, 70, 90, 0.04);
+      --shadow-soft: 0 8px 28px rgba(60, 70, 90, 0.08);
+      --radius: 18px;
+      --radius-sm: 12px;
+      --font: "Figtree", "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      --font-display: "Fraunces", "Noto Serif SC", "Songti SC", "PingFang SC", serif;
+      --glass-bg: rgba(255, 252, 250, 0.58);
+      --glass-border: 1px solid rgba(255, 255, 255, 0.62);
+      --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: var(--font);
+      color: var(--ink);
+      background:
+        linear-gradient(165deg, #e4ecf6 0%, #ebe6f0 38%, #e8f0ee 68%, #f0e8e6 100%);
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* 柔和七彩氛围光晕 */
+    .ambient {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .ambient .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(72px);
+      opacity: 0.55;
+      will-change: transform;
+      animation: orbDrift 28s var(--ease) infinite alternate;
+    }
+
+    .ambient .orb-a {
+      width: 52vw;
+      height: 52vw;
+      max-width: 640px;
+      max-height: 640px;
+      top: -12%;
+      left: -8%;
+      background: radial-gradient(circle, rgba(201, 123, 142, 0.55) 0%, rgba(201, 123, 142, 0) 70%);
+      animation-duration: 32s;
+    }
+
+    .ambient .orb-b {
+      width: 48vw;
+      height: 48vw;
+      max-width: 580px;
+      max-height: 580px;
+      top: 8%;
+      right: -10%;
+      background: radial-gradient(circle, rgba(139, 122, 168, 0.5) 0%, rgba(106, 155, 184, 0.35) 45%, transparent 70%);
+      animation-duration: 36s;
+      animation-delay: -6s;
+    }
+
+    .ambient .orb-c {
+      width: 56vw;
+      height: 56vw;
+      max-width: 700px;
+      max-height: 700px;
+      bottom: -18%;
+      left: 22%;
+      background: radial-gradient(circle, rgba(106, 168, 150, 0.45) 0%, rgba(212, 160, 122, 0.28) 40%, transparent 72%);
+      animation-duration: 40s;
+      animation-delay: -12s;
+    }
+
+    .ambient .orb-d {
+      width: 36vw;
+      height: 36vw;
+      max-width: 420px;
+      max-height: 420px;
+      top: 42%;
+      left: 48%;
+      background: radial-gradient(circle, rgba(106, 155, 184, 0.4) 0%, transparent 68%);
+      animation-duration: 26s;
+      animation-delay: -4s;
+    }
+
+    @keyframes orbDrift {
+      0% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(3%, -4%) scale(1.06); }
+      100% { transform: translate(-2%, 3%) scale(0.96); }
+    }
+
+    @keyframes panelRise {
+      from {
+        opacity: 0;
+        transform: translateY(14px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes toastIn {
+      from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes overlayIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes dialogRise {
+      from {
+        opacity: 0;
+        transform: translateY(18px) scale(0.985);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .topbar,
+    .layout,
+    .scene-overlay,
+    .toast {
+      position: relative;
+      z-index: 1;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      margin: 14px 18px 0;
+      padding: 18px 22px;
+      border-radius: 22px;
+      border: var(--glass-border);
+      background: var(--panel-solid);
+      box-shadow: var(--shadow-soft);
+      position: sticky;
+      top: 12px;
+      z-index: 10;
+    }
+
+    @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+      .topbar {
+        background: var(--glass-bg);
+        -webkit-backdrop-filter: blur(22px) saturate(1.25);
+        backdrop-filter: blur(22px) saturate(1.25);
+      }
+    }
+
+    .topbar-center {
+      min-width: 180px;
+      flex: 0 1 260px;
+    }
+
+    .progress-copy {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.02em;
+    }
+
+    .progress-copy strong {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .progress-track {
+      height: 6px;
+      overflow: hidden;
+      border-radius: 8px;
+      background: rgba(61, 122, 122, 0.12);
+      box-shadow: inset 0 1px 2px rgba(36, 48, 57, 0.06);
+    }
+
+    .progress-fill {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--mint), var(--sky), var(--lilac));
+      background-size: 200% 100%;
+      transition: width 0.35s var(--ease);
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-width: 420px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(22px, 2.4vw, 30px);
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      line-height: 1.2;
+      color: var(--ink);
+      background: linear-gradient(120deg, #2a3a48 0%, #4a5f78 35%, #6b4f6a 70%, #3d6a6a 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    @supports not ((-webkit-background-clip: text) or (background-clip: text)) {
+      .brand h1 {
+        color: var(--ink);
+        -webkit-text-fill-color: unset;
+        background: none;
+      }
+    }
+
+    .brand p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+      max-width: 34em;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    button, .file-btn {
+      appearance: none;
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      background: rgba(255, 255, 255, 0.55);
+      color: var(--ink);
+      border-radius: var(--radius-sm);
+      padding: 9px 14px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgba(36, 48, 57, 0.04);
+      transition:
+        transform 0.2s var(--ease),
+        background 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+      button, .file-btn {
+        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+      }
+    }
+
+    button:hover, .file-btn:hover {
+      border-color: rgba(61, 122, 122, 0.35);
+      color: var(--accent-deep);
+      background: rgba(255, 255, 255, 0.82);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(60, 70, 90, 0.1);
+    }
+
+    button:active, .file-btn:active {
+      transform: translateY(0);
+    }
+
+    button.primary {
+      background: linear-gradient(135deg, #3d7a7a 0%, #4a6f8a 55%, #6b5f8a 100%);
+      border-color: transparent;
+      color: #fff;
+      box-shadow: 0 6px 18px rgba(61, 122, 122, 0.28);
+    }
+
+    button.primary:hover {
+      filter: brightness(1.04);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    button.ghost {
+      background: transparent;
+      box-shadow: none;
+      border-color: rgba(36, 48, 57, 0.1);
+    }
+
+    button.ghost:hover {
+      background: rgba(255, 255, 255, 0.5);
+    }
+
+    button.danger {
+      border-color: rgba(160, 69, 85, 0.22);
+      background: var(--err-bg);
+      color: var(--err);
+    }
+
+    button:disabled,
+    input:disabled {
+      cursor: not-allowed;
+      opacity: 0.62;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+      gap: 18px;
+      padding: 18px 18px 36px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel-solid);
+      border: var(--glass-border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      animation: panelRise 0.55s var(--ease) both;
+    }
+
+    .layout .panel:nth-child(2) {
+      animation-delay: 0.08s;
+    }
+
+    @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+      .panel {
+        background: var(--glass-bg);
+        -webkit-backdrop-filter: blur(24px) saturate(1.2);
+        backdrop-filter: blur(24px) saturate(1.2);
+      }
+    }
+
+    .panel-hd {
+      padding: 15px 18px;
+      border-bottom: 1px solid var(--line-soft);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.28);
+    }
+
+    .panel-hd h2 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+
+    .panel-hd span {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .panel-bd {
+      padding: 15px 18px 20px;
+      display: grid;
+      gap: 12px;
+      max-height: calc(100vh - 160px);
+      overflow: auto;
+    }
+
+    label.field {
+      display: grid;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    label.field > span.title {
+      color: var(--ink);
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid rgba(36, 48, 57, 0.12);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      font: inherit;
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.72);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: rgba(61, 122, 122, 0.45);
+      box-shadow: 0 0 0 3px rgba(61, 122, 122, 0.12);
+      background: rgba(255, 255, 255, 0.92);
+    }
+
+    select.compact-select {
+      width: auto;
+      min-width: 150px;
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 72px;
+      line-height: 1.5;
+    }
+
+    .row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .hint {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .chip {
+      border: 1px solid rgba(36, 48, 57, 0.1);
+      background: rgba(255, 255, 255, 0.65);
+      border-radius: 10px;
+      padding: 6px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s var(--ease);
+    }
+
+    .chip:hover {
+      border-color: rgba(61, 122, 122, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .chip.active {
+      background: var(--accent-soft);
+      border-color: rgba(61, 122, 122, 0.4);
+      color: var(--accent-deep);
+    }
+
+    .chip.disabled {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 10px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid transparent;
+    }
+
+    .badge.ok { background: var(--ok-bg); color: var(--ok); border-color: rgba(47, 122, 92, 0.15); }
+    .badge.warn { background: var(--warn-bg); color: var(--warn); border-color: rgba(160, 106, 40, 0.15); }
+    .badge.err { background: var(--err-bg); color: var(--err); border-color: rgba(160, 69, 85, 0.15); }
+
+    .dialogue {
+      display: grid;
+      gap: 10px;
+    }
+
+    .turn {
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.5);
+      box-shadow: 0 2px 10px rgba(60, 70, 90, 0.04);
+      transition: transform 0.2s var(--ease), box-shadow 0.2s ease;
+    }
+
+    .turn:hover {
+      box-shadow: 0 6px 18px rgba(60, 70, 90, 0.07);
+    }
+
+    .turn.user {
+      background: linear-gradient(135deg, rgba(106, 155, 184, 0.18), rgba(255, 255, 255, 0.55));
+    }
+    .turn.supporter {
+      background: linear-gradient(135deg, rgba(201, 123, 142, 0.14), rgba(255, 255, 255, 0.55));
+    }
+
+    .turn-hd {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .turn-hd strong {
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    .turn textarea {
+      min-height: 64px;
+      background: rgba(255, 255, 255, 0.62);
+    }
+
+    .turn .count {
+      text-align: right;
+      font-size: 11px;
+      margin-top: 4px;
+      color: var(--muted);
+    }
+
+    .turn .count.over { color: var(--err); font-weight: 600; }
+
+    .locked-note {
+      border: 1px dashed rgba(61, 122, 122, 0.4);
+      background: var(--accent-soft);
+      color: var(--accent-deep);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .selected-scene {
+      display: grid;
+      gap: 10px;
+      padding: 15px;
+      border: 1px solid rgba(255, 255, 255, 0.65);
+      border-radius: 14px;
+      background:
+        linear-gradient(135deg, rgba(106, 168, 150, 0.18), rgba(139, 122, 168, 0.1) 50%, rgba(255, 252, 250, 0.7));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    }
+
+    .selected-scene.empty {
+      border-style: dashed;
+      border-color: rgba(36, 48, 57, 0.14);
+      background: rgba(255, 255, 255, 0.28);
+      box-shadow: none;
+    }
+
+    .selected-scene-top,
+    .scene-browser-head,
+    .scene-header-actions,
+    .scene-list-head,
+    .scene-card-head,
+    .scene-card-actions,
+    .scene-editor-head,
+    .scene-editor-actions,
+    .mini-stat-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .selected-scene .eyebrow {
+      color: var(--accent-deep);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .selected-scene strong {
+      font-family: var(--font-display);
+      font-size: 17px;
+      line-height: 1.45;
+      font-weight: 600;
+    }
+
+    .selected-scene p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .scene-meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .scene-meta {
+      display: inline-flex;
+      border-radius: 8px;
+      padding: 4px 8px;
+      background: rgba(255, 255, 255, 0.62);
+      color: var(--muted);
+      font-size: 11px;
+      border: 1px solid rgba(255, 255, 255, 0.45);
+    }
+
+    .preset-wrap {
+      display: grid;
+      gap: 7px;
+      padding-top: 2px;
+    }
+
+    .preset-wrap > span {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .preset-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .preset-row button {
+      padding: 6px 9px;
+      font-size: 11px;
+      background: rgba(255, 255, 255, 0.7);
+    }
+
+    .turn-guide {
+      margin-bottom: 6px;
+      color: var(--accent-deep);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .scene-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: rgba(42, 50, 62, 0.32);
+      animation: overlayIn 0.25s ease both;
+    }
+
+    @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+      .scene-overlay {
+        -webkit-backdrop-filter: blur(14px) saturate(1.1);
+        backdrop-filter: blur(14px) saturate(1.1);
+        background: rgba(42, 50, 62, 0.28);
+      }
+    }
+
+    .scene-dialog {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      width: min(1180px, 100%);
+      height: min(820px, calc(100vh - 48px));
+      overflow: hidden;
+      border: var(--glass-border);
+      border-radius: 22px;
+      background: var(--panel-solid);
+      box-shadow: 0 28px 80px rgba(40, 50, 70, 0.22);
+      animation: dialogRise 0.35s var(--ease) both;
+    }
+
+    @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+      .scene-dialog {
+        background: rgba(255, 252, 250, 0.72);
+        -webkit-backdrop-filter: blur(28px) saturate(1.25);
+        backdrop-filter: blur(28px) saturate(1.25);
+      }
+    }
+
+    .scene-browser-head {
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--line-soft);
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .scene-browser-head h2,
+    .scene-browser-head p {
+      margin: 0;
+    }
+
+    .scene-browser-head h2 {
+      margin-bottom: 4px;
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .scene-browser-head p {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .scene-browser-body {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      min-height: 0;
+    }
+
+    .scene-filters {
+      display: grid;
+      align-content: start;
+      gap: 14px;
+      padding: 18px;
+      overflow: auto;
+      border-right: 1px solid var(--line-soft);
+      background: rgba(139, 122, 168, 0.06);
+    }
+
+    .scene-editor {
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.55);
+    }
+
+    .scene-editor-head h3 {
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .scene-editor-actions {
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .scene-editor-actions button {
+      padding: 7px 11px;
+      font-size: 12px;
+    }
+
+    .scene-results {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      min-width: 0;
+      min-height: 0;
+      padding: 18px;
+    }
+
+    .scene-list-head {
+      margin-bottom: 12px;
+    }
+
+    .scene-list-head strong {
+      font-size: 14px;
+    }
+
+    .scene-list {
+      display: grid;
+      align-content: start;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .scene-card {
+      display: grid;
+      gap: 9px;
+      padding: 13px;
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.58);
+      box-shadow: 0 2px 8px rgba(60, 70, 90, 0.04);
+      transition:
+        border-color 0.2s ease,
+        transform 0.22s var(--ease),
+        box-shadow 0.22s ease,
+        background 0.2s ease;
+    }
+
+    .scene-card:hover {
+      border-color: rgba(61, 122, 122, 0.35);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(60, 70, 90, 0.1);
+      background: rgba(255, 255, 255, 0.78);
+    }
+
+    .scene-card.is-selected {
+      border-color: rgba(61, 122, 122, 0.45);
+      box-shadow: 0 0 0 1px rgba(61, 122, 122, 0.25), 0 8px 20px rgba(61, 122, 122, 0.12);
+      background: linear-gradient(145deg, rgba(106, 168, 150, 0.14), rgba(255, 255, 255, 0.7));
+    }
+
+    .scene-card.is-editing {
+      border-color: rgba(160, 106, 40, 0.4);
+      box-shadow: 0 0 0 1px rgba(160, 106, 40, 0.22);
+    }
+
+    .scene-card h3 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.5;
+    }
+
+    .scene-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .scene-card-actions {
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      padding-top: 2px;
+    }
+
+    .scene-card-actions button {
+      padding: 6px 10px;
+      font-size: 11px;
+    }
+
+    .status-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .status-label::before {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: rgba(36, 48, 57, 0.2);
+      content: "";
+    }
+
+    .status-label.draft::before { background: var(--warn); }
+    .status-label.completed::before { background: var(--ok); }
+
+    .mini-stat-row {
+      align-items: stretch;
+    }
+
+    .mini-stat {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.55);
+      text-align: center;
+    }
+
+    .mini-stat strong,
+    .mini-stat span {
+      display: block;
+    }
+
+    .mini-stat strong {
+      margin-bottom: 2px;
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .mini-stat span {
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .scene-empty {
+      grid-column: 1 / -1;
+      padding: 40px 20px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .coverage-dialog {
+      width: min(1280px, 100%);
+      height: min(900px, calc(100vh - 48px));
+    }
+
+    .coverage-body {
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
+      gap: 14px;
+      min-height: 0;
+      padding: 16px 18px 18px;
+      overflow: auto;
+    }
+
+    .coverage-stats {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .coverage-stat {
+      padding: 12px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.55);
+      box-shadow: 0 2px 8px rgba(60, 70, 90, 0.04);
+    }
+
+    .coverage-stat strong {
+      display: block;
+      margin-bottom: 4px;
+      font-family: var(--font-display);
+      font-size: 22px;
+      line-height: 1.1;
+      font-weight: 600;
+    }
+
+    .coverage-stat span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .coverage-stat .status-triple {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 12px;
+      margin-top: 2px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .coverage-stat .status-triple b {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .coverage-toolbar {
+      display: grid;
+      grid-template-columns: 180px minmax(220px, 1fr) 180px auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .coverage-toolbar input,
+    .coverage-toolbar select {
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.76);
+    }
+
+    .coverage-toolbar .ghost {
+      white-space: nowrap;
+    }
+
+    .coverage-main {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.85fr);
+      gap: 14px;
+      min-height: 320px;
+    }
+
+    .coverage-panel {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      min-height: 0;
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.48);
+      overflow: hidden;
+    }
+
+    @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+      .coverage-panel {
+        -webkit-backdrop-filter: blur(12px);
+        backdrop-filter: blur(12px);
+      }
+    }
+
+    .coverage-panel-hd {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line-soft);
+      background: rgba(255, 255, 255, 0.28);
+    }
+
+    .coverage-panel-hd h3 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .coverage-panel-hd span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .coverage-panel-bd {
+      min-height: 0;
+      overflow: auto;
+      padding: 12px;
+    }
+
+    .coverage-treemap-svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      min-height: 280px;
+      border-radius: 12px;
+      background: linear-gradient(160deg, rgba(139, 122, 168, 0.08), rgba(106, 168, 150, 0.08) 50%, rgba(212, 160, 122, 0.08));
+    }
+
+    .coverage-treemap-svg .tm-node {
+      cursor: pointer;
+      transition: opacity 0.18s ease;
+    }
+
+    .coverage-treemap-svg .tm-node:hover {
+      opacity: 0.88;
+    }
+
+    .coverage-treemap-svg .tm-node.is-selected > rect:first-of-type {
+      stroke: var(--ink);
+      stroke-width: 2.5;
+    }
+
+    .coverage-treemap-svg text {
+      pointer-events: none;
+      fill: rgba(36, 48, 57, 0.88);
+      font-family: var(--font);
+    }
+
+    .coverage-treemap-svg .tm-frame-title {
+      fill: rgba(36, 48, 57, 0.92);
+      font-weight: 700;
+    }
+
+    .coverage-treemap-svg .tm-subtitle {
+      fill: rgba(36, 48, 57, 0.62);
+    }
+
+    .coverage-detail-summary {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .coverage-detail-summary .kv {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 13px;
+    }
+
+    .coverage-detail-summary .kv span {
+      color: var(--muted);
+    }
+
+    .coverage-detail-summary .kv strong {
+      text-align: right;
+    }
+
+    .coverage-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .coverage-pill {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid var(--line-soft);
+      border-radius: 999px;
+      padding: 4px 8px;
+      background: rgba(255, 255, 255, 0.72);
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .coverage-mini-progress {
+      height: 7px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(36, 48, 57, 0.08);
+    }
+
+    .coverage-mini-progress span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--accent);
+    }
+
+    .coverage-scene-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .coverage-scene-item {
+      display: grid;
+      gap: 6px;
+      padding: 10px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.62);
+      transition: transform 0.18s var(--ease), box-shadow 0.18s ease;
+    }
+
+    .coverage-scene-item:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(60, 70, 90, 0.08);
+    }
+
+    .coverage-scene-item-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .coverage-scene-item p {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .coverage-scene-item .scene-meta {
+      background: rgba(139, 122, 168, 0.1);
+    }
+
+    .coverage-scene-item button {
+      padding: 5px 10px;
+      font-size: 11px;
+    }
+
+    .coverage-ranks {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .coverage-rank-card {
+      padding: 12px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.5);
+    }
+
+    .coverage-rank-card h3 {
+      margin: 0 0 10px;
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .coverage-bar-row {
+      display: grid;
+      grid-template-columns: minmax(72px, 38%) minmax(0, 1fr) 36px;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+
+    .coverage-bar-row .label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--ink);
+    }
+
+    .coverage-bar-track {
+      height: 7px;
+      overflow: hidden;
+      border-radius: 8px;
+      background: rgba(36, 48, 57, 0.08);
+    }
+
+    .coverage-bar-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--mint), var(--sky));
+    }
+
+    .coverage-bar-row .value {
+      color: var(--muted);
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .coverage-empty-hint {
+      padding: 28px 12px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .toast {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      z-index: 80;
+      max-width: min(380px, calc(100vw - 44px));
+      padding: 13px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(36, 48, 57, 0.92);
+      color: #f5f2f0;
+      box-shadow: 0 16px 40px rgba(36, 48, 57, 0.28);
+      font-size: 13px;
+      animation: toastIn 0.3s var(--ease) both;
+    }
+
+    @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+      .toast {
+        background: rgba(36, 48, 57, 0.78);
+        -webkit-backdrop-filter: blur(16px);
+        backdrop-filter: blur(16px);
+      }
+    }
+
+    .hidden { display: none !important; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .ambient .orb,
+      .panel,
+      .scene-overlay,
+      .scene-dialog,
+      .toast {
+        animation: none !important;
+      }
+      button, .file-btn, .chip, .scene-card, .turn, .coverage-scene-item {
+        transition: none !important;
+      }
+    }
+
+    @media (max-width: 1280px) {
+      .topbar {
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+      .topbar-center {
+        order: 3;
+        flex-basis: 100%;
+      }
+    }
+
+    @media (max-width: 1100px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+      .panel-bd {
+        max-height: none;
+      }
+      .coverage-stats {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .coverage-main {
+        grid-template-columns: 1fr;
+      }
+      .coverage-toolbar {
+        grid-template-columns: 1fr;
+      }
+      .coverage-ranks {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .topbar {
+        margin: 10px 10px 0;
+        padding: 14px 14px;
+        top: 8px;
+        border-radius: 18px;
+      }
+      .topbar,
+      .layout {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+      .layout {
+        padding-top: 14px;
+        padding-bottom: 28px;
+      }
+      .brand h1 {
+        font-size: 22px;
+      }
+      .scene-overlay {
+        padding: 0;
+      }
+      .scene-dialog {
+        width: 100%;
+        height: 100vh;
+        height: 100dvh;
+        border: 0;
+        border-radius: 0;
+      }
+      .coverage-dialog {
+        height: 100vh;
+        height: 100dvh;
+      }
+      .scene-browser-body {
+        grid-template-columns: 1fr;
+        overflow: auto;
+      }
+      .scene-filters {
+        overflow: visible;
+        border-right: 0;
+        border-bottom: 1px solid var(--line-soft);
+      }
+      .scene-results {
+        overflow: visible;
+      }
+      .scene-list {
+        grid-template-columns: 1fr;
+        overflow: visible;
+      }
+      .row-2 {
+        grid-template-columns: 1fr;
+      }
+      .coverage-stats {
+        grid-template-columns: 1fr 1fr;
+      }
+      .ambient .orb {
+        filter: blur(56px);
+        opacity: 0.42;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient" aria-hidden="true">
+    <span class="orb orb-a"></span>
+    <span class="orb orb-b"></span>
+    <span class="orb orb-c"></span>
+    <span class="orb orb-d"></span>
+  </div>
+  <header class="topbar">
+    <div class="brand">
+      <h1>对话数据集构造台</h1>
+      <p>维护生活事件场景，构造并校验 6–12 轮情感陪伴对话</p>
+    </div>
+    <div class="topbar-center" aria-label="数据集完成进度">
+      <div class="progress-copy">
+        <span>数据集进度</span>
+        <strong id="progressText">0 / 0 已完成</strong>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+    <div class="actions">
+      <button type="button" id="btnSceneLibrary">选择场景</button>
+      <button type="button" class="ghost" id="btnCoverage">场景分布</button>
+      <button type="button" class="ghost" id="btnSaveDraft">保存草稿</button>
+      <button type="button" class="primary" id="btnCompleteNext">完成并写下一条</button>
+      <button type="button" class="ghost" id="btnDrafts">草稿箱</button>
+      <button type="button" class="ghost" id="btnExample">填入示例</button>
+      <button type="button" class="ghost" id="btnReset">清空</button>
+      <label class="file-btn">
+        导入 JSON
+        <input type="file" id="importFile" accept="application/json,.json" hidden />
+      </label>
+      <button type="button" class="ghost" id="btnCopy">复制 JSON</button>
+      <button type="button" class="ghost" id="btnExportAll">导出已完成 JSONL</button>
+      <button type="button" id="btnExport">导出当前</button>
+    </div>
+  </header>
+
+  <div class="scene-overlay hidden" id="sceneOverlay" role="dialog" aria-modal="true" aria-labelledby="sceneDialogTitle">
+    <section class="scene-dialog">
+      <div class="scene-browser-head">
+        <div>
+          <h2 id="sceneDialogTitle">场景库</h2>
+          <p>选择、搜索、新增、编辑或删除场景；草稿和完成状态只保存在当前浏览器。</p>
+        </div>
+        <div class="scene-header-actions">
+          <button type="button" class="ghost" id="btnCoverageFromLibrary">场景分布</button>
+          <button type="button" class="ghost" id="btnNewScene">新增场景</button>
+          <button type="button" class="ghost" id="btnResetSceneLibrary">恢复默认</button>
+          <button type="button" id="btnCloseSceneLibrary">关闭</button>
+        </div>
+      </div>
+      <div class="scene-browser-body">
+        <aside class="scene-filters">
+          <label class="field">
+            <span class="title">先选年龄段</span>
+            <select id="sceneAgeContext"></select>
+          </label>
+          <label class="field">
+            <span class="title">搜索场景</span>
+            <input id="sceneSearch" placeholder="搜索事件、机制或分类" />
+          </label>
+          <label class="field">
+            <span class="title">分类</span>
+            <select id="sceneCategoryFilter"></select>
+          </label>
+          <label class="field">
+            <span class="title">构造状态</span>
+            <select id="sceneStatusFilter">
+              <option value="all">全部状态</option>
+              <option value="unstarted">未开始</option>
+              <option value="draft">草稿</option>
+              <option value="completed">已完成</option>
+            </select>
+          </label>
+          <div class="mini-stat-row" aria-label="场景状态统计">
+            <div class="mini-stat"><strong id="statUnstarted">0</strong><span>未开始</span></div>
+            <div class="mini-stat"><strong id="statDraft">0</strong><span>草稿</span></div>
+            <div class="mini-stat"><strong id="statCompleted">0</strong><span>完成</span></div>
+          </div>
+          <div class="hint">年龄段决定语言风格和写作状态；场景本身跨年龄段复用。</div>
+          <form class="scene-editor hidden" id="sceneEditor">
+            <div class="scene-editor-head">
+              <h3 id="sceneEditorTitle">新增场景</h3>
+              <button type="button" class="ghost" id="btnCancelSceneEdit">取消</button>
+            </div>
+            <label class="field">
+              <span class="title">场景 ID</span>
+              <input id="sceneEditorId" placeholder="例如 custom_001" />
+            </label>
+            <label class="field">
+              <span class="title">分类</span>
+              <input id="sceneEditorCategory" list="sceneCategoryHints" placeholder="例如 连接与归属" />
+              <datalist id="sceneCategoryHints"></datalist>
+            </label>
+            <label class="field">
+              <span class="title">机制</span>
+              <input id="sceneEditorMechanism" list="sceneMechanismHints" placeholder="例如 被排除与落单" />
+              <datalist id="sceneMechanismHints"></datalist>
+            </label>
+            <label class="field">
+              <span class="title">生活事件</span>
+              <textarea id="sceneEditorEvent" placeholder="写成一个具体可对话的事件"></textarea>
+            </label>
+            <div class="scene-editor-actions">
+              <button type="submit" class="primary" id="btnSaveScene">保存场景</button>
+            </div>
+          </form>
+        </aside>
+        <section class="scene-results">
+          <div class="scene-list-head">
+            <strong id="sceneResultCount">0 个场景</strong>
+            <button type="button" class="ghost" id="btnResetSceneFilters">重置筛选</button>
+          </div>
+          <div class="scene-list" id="sceneList"></div>
+        </section>
+      </div>
+    </section>
+  </div>
+
+  <div class="scene-overlay hidden" id="coverageOverlay" role="dialog" aria-modal="true" aria-labelledby="coverageDialogTitle">
+    <section class="scene-dialog coverage-dialog">
+      <div class="scene-browser-head">
+        <div>
+          <h2 id="coverageDialogTitle">场景库覆盖分析</h2>
+          <p>按分类 / 机制查看场景分布与完成进度，用于发现覆盖不足的区域。</p>
+        </div>
+        <div class="scene-header-actions">
+          <button type="button" class="ghost" id="btnCoverageRefresh">刷新</button>
+          <button type="button" class="ghost" id="btnCoverageOpenLibrary">打开场景库</button>
+          <button type="button" id="btnCloseCoverage">关闭</button>
+        </div>
+      </div>
+      <div class="coverage-body">
+        <div class="coverage-stats" id="coverageStats" aria-label="覆盖总览"></div>
+        <div class="coverage-toolbar" aria-label="覆盖筛选">
+          <select id="coverageAgeContext"></select>
+          <input id="coverageSearch" placeholder="搜索分类、机制或场景" />
+          <select id="coverageStatusFilter">
+            <option value="all">全部状态</option>
+            <option value="unstarted">仅未开始</option>
+            <option value="draft">仅草稿</option>
+            <option value="completed">仅已完成</option>
+          </select>
+          <button type="button" class="ghost" id="btnCoverageClearFilters">清除筛选</button>
+        </div>
+        <div class="coverage-main">
+          <section class="coverage-panel">
+            <div class="coverage-panel-hd">
+              <h3>场景分布树图</h3>
+              <button type="button" class="ghost" id="btnCoverageClearSelection">清除选中</button>
+            </div>
+            <div class="coverage-panel-bd" id="coverageTreemapHost"></div>
+          </section>
+          <section class="coverage-panel">
+            <div class="coverage-panel-hd">
+              <h3 id="coverageDetailTitle">明细</h3>
+              <span id="coverageDetailHint">未选中 · 显示总览</span>
+            </div>
+            <div class="coverage-panel-bd" id="coverageDetail"></div>
+          </section>
+        </div>
+        <div class="coverage-ranks" id="coverageRanks" aria-label="覆盖排行"></div>
+      </div>
+    </section>
+  </div>
+
+  <main class="layout">
+    <!-- 左：元数据 -->
+    <section class="panel">
+      <div class="panel-hd">
+        <h2>1. 场景与标签</h2>
+        <span id="statusBadge" class="badge warn">待完善</span>
+      </div>
+      <div class="panel-bd" id="metaForm">
+        <label class="field">
+          <span class="title">sample_id</span>
+          <input id="sample_id" placeholder="例如 workplace_lonely_001" />
+        </label>
+
+        <div class="row-2">
+          <label class="field">
+            <span class="title">revision</span>
+            <input id="revision" type="number" min="1" value="1" />
+          </label>
+          <label class="field">
+            <span class="title">language</span>
+            <input value="zh-CN" disabled />
+          </label>
+        </div>
+
+        <label class="field">
+          <span class="title">场景 scene_type</span>
+          <select id="scene_type"></select>
+        </label>
+
+        <div class="row-2">
+          <label class="field">
+            <span class="title">年龄段 age_band</span>
+            <select id="age_band"></select>
+          </label>
+          <label class="field">
+            <span class="title">具体年龄</span>
+            <input id="specific_age" type="number" />
+          </label>
+        </div>
+        <div class="hint" id="ageHint"></div>
+
+        <label class="field">
+          <span class="title">情绪极性 emotion_valence</span>
+          <select id="emotion_valence"></select>
+        </label>
+      </div>
+    </section>
+
+    <!-- 中：对话 -->
+    <section class="panel">
+      <div class="panel-hd">
+        <h2>2. 对话历史 history</h2>
+        <span id="turnCountHint">0 / 6–12 轮 · 末条须为 user</span>
+      </div>
+      <div class="panel-bd">
+        <div class="selected-scene empty" id="selectedSceneCard">
+          <div class="selected-scene-top">
+            <span class="eyebrow">当前原子事件</span>
+            <button type="button" class="ghost" id="btnChangeScene">从场景库选择</button>
+          </div>
+          <strong id="selectedSceneTitle">尚未选择场景</strong>
+          <p id="selectedSceneDescription">先选择一个生活事件，再围绕它构造有前文依赖、末轮有评测考点的多轮对话。</p>
+          <div class="scene-meta-row" id="selectedSceneMeta"></div>
+        </div>
+        <div class="actions" style="padding:0">
+          <select id="turnCountTemplate" class="compact-select" aria-label="选择对话轮数">
+            <option value="7">7 轮（推荐）</option>
+            <option value="9">9 轮</option>
+            <option value="11">11 轮</option>
+            <option value="6">6 轮（上下文截取）</option>
+            <option value="8">8 轮（上下文截取）</option>
+            <option value="10">10 轮（上下文截取）</option>
+            <option value="12">12 轮（上下文截取）</option>
+          </select>
+          <button type="button" id="btnSeedTurns">按所选轮数重建空壳</button>
+        </div>
+        <div class="hint">
+          规则：6–12 条；user / supporter 严格交替；最后一条必须是 user。
+          用户单条 ≤500 字，陪伴者单条 ≤200 字。末轮之后才是待补全的 supporter 回复（不在本样本里写答案）。
+        </div>
+        <div class="dialogue" id="historyList"></div>
+        <div class="locked-note">
+          target 固定：supporter 回复，1–3 句，≤40 字。基础样本不保存标准答案。
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
+
+<script id="sceneLibraryData" type="application/json">__SCENE_LIBRARY_JSON__</script>
+
+<script>
+const DEFAULT_SCENE_LIBRARY = JSON.parse(document.getElementById("sceneLibraryData").textContent);
+const WORKSPACE_STORAGE_KEY = "a1_dialogue_authoring_workspace_v1";
+const SCENE_STORAGE_KEY = "dialogue_authoring_scene_library_v1";
+const SCENE_ID_PATTERN = /^[a-z0-9][a-z0-9_-]{2,63}$/;
+
+const LABELS = {
+  age_band: {
+    preschool: "幼儿园 3–5",
+    primary_lower: "小学低年级 6–8",
+    primary_upper: "小学高年级 9–11",
+    middle_school: "初中 12–14",
+    high_school: "高中 15–17",
+    college: "大学 18–21",
+    workplace: "职场人 22–35"
+  },
+  scene: {
+    separation_loneliness: "分离/孤独",
+    setback: "挫败",
+    social_conflict: "社交冲突",
+    family_pressure: "家庭压力",
+    loss: "失去",
+    fear_anxiety: "恐惧焦虑",
+    positive_sharing: "正情绪小声分享",
+    achievement_recognition: "成就与被认可",
+    deep_interest_like_minded: "深度兴趣/找到同好",
+    anticipation_surprise_gratitude: "期待/惊喜/感谢",
+    pretend_play_roleplay: "假装游戏/角色扮演",
+    bedtime_late_night: "睡前/深夜情绪",
+    emotional_storm: "情绪风暴",
+    affection_attention: "撒娇求关注",
+    secret_privacy: "秘密分享/隐私边界",
+    dependency_signal: "依赖信号",
+    relationship_replacement_exclusivity: "关系替代/独占",
+    hesitant_low_energy: "欲言又止/低能量",
+    farewell_separation: "告别与分离",
+    comfort_rejection: "拒绝安慰",
+    ai_rejection: "推开 AI",
+    emotional_blackmail: "情绪勒索",
+    sarcasm_reality_check: "阴阳怪气/现实检验"
+  },
+  emotion_valence: {
+    positive: "积极",
+    negative: "消极",
+    mixed: "混合",
+    neutral: "中性"
+  },
+  review_status: {
+    draft: "draft 草稿",
+    first_review: "first_review 一审",
+    double_reviewed: "double_reviewed 双人复核",
+    approved: "approved 已通过"
+  }
+};
+
+const AGE_RANGE = {
+  preschool: [3, 5],
+  primary_lower: [6, 8],
+  primary_upper: [9, 11],
+  middle_school: [12, 14],
+  high_school: [15, 17],
+  college: [18, 21],
+  workplace: [22, 35]
+};
+
+const AGE_DEFAULT_SPECIFIC = {
+  preschool: 4,
+  primary_lower: 7,
+  primary_upper: 10,
+  middle_school: 13,
+  high_school: 16,
+  college: 20,
+  workplace: 28
+};
+
+const REDLINE = {
+  secret_privacy: "privacy",
+  dependency_signal: "dependency",
+  relationship_replacement_exclusivity: "relationship_replacement"
+};
+
+const CATEGORY_DEFAULT_SCENE_TYPES = {
+  "连接与归属": "separation_loneliness",
+  "被忽视/未被看见": "social_conflict",
+  "能力与评价": "setback",
+  "自主与边界": "social_conflict",
+  "公平与尊严": "social_conflict",
+  "家庭与照护": "family_pressure",
+  "失去与变化": "loss",
+  "安全与不确定": "fear_anxiety",
+  "自我与身份": "social_conflict",
+  "身体与能量": "setback",
+  "数字生活": "social_conflict",
+  "日常微挫败": "setback"
+};
+
+const SCENE_TYPE_OVERRIDES = {
+  "mechanism-connection-02": "social_conflict",
+  "mechanism-connection-04": "social_conflict",
+  "mechanism-connection-06": "social_conflict",
+  "mechanism-identity-05": "fear_anxiety",
+  "mechanism-energy-02": "social_conflict",
+  "mechanism-digital-01": "separation_loneliness",
+  "mechanism-micro-frustration-03": "separation_loneliness",
+  "event-072": "family_pressure",
+  "event-073": "family_pressure",
+  "event-074": "family_pressure",
+  "event-081": "family_pressure",
+  "event-082": "family_pressure",
+  "event-083": "family_pressure",
+  "event-173": "family_pressure",
+  "event-190": "setback"
+};
+
+let history = [];
+let SCENE_LIBRARY = [];
+let selectedScene = null;
+let workspaceRecords = {};
+let sceneEditorMode = "create";
+let editingSceneId = null;
+let isHydrating = false;
+let autosaveTimer = null;
+let toastTimer = null;
+let coverageSelection = null;
+let coverageFilters = { query: "", status: "all" };
+let coverageResizeTimer = null;
+
+function fillSelect(id, map, keys = Object.keys(map)) {
+  const el = document.getElementById(id);
+  el.innerHTML = keys.map(k => `<option value="${k}">${map[k] || k}</option>`).join("");
+}
+
+function initStaticSelects() {
+  fillSelect("age_band", LABELS.age_band);
+  fillSelect("emotion_valence", LABELS.emotion_valence);
+}
+
+function refreshSceneOptions() {
+  const scenes = Object.keys(LABELS.scene);
+  const current = document.getElementById("scene_type").value;
+  fillSelect("scene_type", Object.fromEntries(scenes.map(s => [s, LABELS.scene[s]])), scenes);
+  if (scenes.includes(current)) document.getElementById("scene_type").value = current;
+  applyRedlineLocks();
+}
+
+function applyAgeHint() {
+  const band = document.getElementById("age_band").value;
+  const [min, max] = AGE_RANGE[band];
+  const ageEl = document.getElementById("specific_age");
+  ageEl.min = min;
+  ageEl.max = max;
+  let age = Number(ageEl.value);
+  if (!age || age < min || age > max) ageEl.value = AGE_DEFAULT_SPECIFIC[band] || min;
+  document.getElementById("ageHint").textContent = `当前年龄段允许年龄：${min}–${max} 岁`;
+}
+
+function getAuthoringAgeBand() {
+  const sceneAge = document.getElementById("sceneAgeContext")?.value;
+  const formAge = document.getElementById("age_band")?.value;
+  return AGE_RANGE[sceneAge] ? sceneAge : (AGE_RANGE[formAge] ? formAge : "preschool");
+}
+
+function syncAgeContextControls(ageBand = getAuthoringAgeBand()) {
+  ["sceneAgeContext", "coverageAgeContext"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && AGE_RANGE[ageBand]) el.value = ageBand;
+  });
+}
+
+function setAuthoringAgeBand(ageBand, forceSpecificAge = true) {
+  if (!AGE_RANGE[ageBand]) return;
+  const ageBandEl = document.getElementById("age_band");
+  const specificAgeEl = document.getElementById("specific_age");
+  ageBandEl.value = ageBand;
+  if (forceSpecificAge) specificAgeEl.value = AGE_DEFAULT_SPECIFIC[ageBand] || AGE_RANGE[ageBand][0];
+  applyAgeHint();
+  syncAgeContextControls(ageBand);
+}
+
+function fillAgeContextSelects() {
+  ["sceneAgeContext", "coverageAgeContext"].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.replaceChildren(
+      ...Object.entries(LABELS.age_band).map(([value, label]) => new Option(label, value)),
+    );
+  });
+  syncAgeContextControls(document.getElementById("age_band").value);
+}
+
+function getSceneRecordKey(sceneId, ageBand = getAuthoringAgeBand()) {
+  return `${ageBand}::${sceneId}`;
+}
+
+function parseSceneRecordKey(recordKey, record = null) {
+  if (recordKey.includes("::")) {
+    const [ageBand, sceneId] = recordKey.split("::");
+    return { ageBand, sceneId };
+  }
+  return {
+    ageBand: record?.ageBand || record?.sample?.age_band || "workplace",
+    sceneId: record?.sceneId || recordKey,
+  };
+}
+
+function applyRedlineLocks() {
+  const scene = document.getElementById("scene_type").value;
+  authoringState.human_only = !!REDLINE[scene];
+}
+
+function turnWritingGuide(index, turn) {
+  const isLast = index === history.length - 1;
+  if (isLast && turn.role === "user") {
+    return "评测末轮：写出最需要模型接住的信号；这句话之后不要再写陪伴者答案。";
+  }
+  if (turn.role === "supporter") {
+    return "承接上一轮里的具体信息，保持自然；不要提前总结、说教或解决问题。";
+  }
+  if (index === 0) {
+    return selectedScene
+      ? `从具体发生的事开始，参考原子事件：“${selectedScene.event}”。`
+      : "从一件具体发生的事开始，避免直接堆情绪标签。";
+  }
+  return "补充新的细节、反应或关系变化，让末轮信号有前文依据。";
+}
+
+function renderHistory() {
+  const box = document.getElementById("historyList");
+  box.innerHTML = history.map((t, i) => {
+    const max = t.role === "user" ? 500 : 200;
+    const over = (t.content || "").length > max;
+    const roleLabel = t.role === "user" ? "用户 user" : "陪伴者 supporter";
+    return `
+      <div class="turn ${t.role}">
+        <div class="turn-hd">
+          <strong>第 ${i + 1} 轮 · ${roleLabel}${i === history.length - 1 ? "（评测末轮）" : ""}</strong>
+          <span>${t.role === "user" ? "用户表达" : "上下文承接"}</span>
+        </div>
+        <div class="turn-guide">${escapeHtml(turnWritingGuide(i, t))}</div>
+        <textarea data-idx="${i}" placeholder="${t.role === "user" ? "用户说…" : "陪伴者说…"}">${escapeHtml(t.content || "")}</textarea>
+        <div class="count ${over ? "over" : ""}">${(t.content || "").length} / ${max}</div>
+      </div>`;
+  }).join("") || `<div class="hint">还没有轮次。点上方按钮添加，或「生成 7 轮空壳」。</div>`;
+
+  box.querySelectorAll("textarea").forEach(ta => {
+    ta.addEventListener("input", () => {
+      history[Number(ta.dataset.idx)].content = ta.value;
+      const max = history[Number(ta.dataset.idx)].role === "user" ? 500 : 200;
+      const count = ta.parentElement.querySelector(".count");
+      count.textContent = `${ta.value.length} / ${max}`;
+      count.classList.toggle("over", ta.value.length > max);
+      updatePreview();
+      queueAutosave();
+    });
+  });
+
+  document.getElementById("turnCountHint").textContent =
+    `${history.length} / 6–12 轮 · 末条须为 user`;
+}
+
+function escapeHtml(s) {
+  return String(s)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  clearTimeout(toastTimer);
+  toast.textContent = message;
+  toast.classList.remove("hidden");
+  toastTimer = setTimeout(() => toast.classList.add("hidden"), 2600);
+}
+
+function readWorkspace() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(WORKSPACE_STORAGE_KEY) || "{}");
+    if (!parsed || typeof parsed.records !== "object" || !parsed.records) return {};
+    const migrated = {};
+    Object.entries(parsed.records).forEach(([recordKey, record]) => {
+      const parsedKey = parseSceneRecordKey(recordKey, record);
+      if (!AGE_RANGE[parsedKey.ageBand] || !parsedKey.sceneId) return;
+      const nextKey = getSceneRecordKey(parsedKey.sceneId, parsedKey.ageBand);
+      migrated[nextKey] = {
+        ...record,
+        sceneId: parsedKey.sceneId,
+        ageBand: parsedKey.ageBand,
+      };
+    });
+    return migrated;
+  } catch {
+    return {};
+  }
+}
+
+function writeWorkspace() {
+  try {
+    localStorage.setItem(
+      WORKSPACE_STORAGE_KEY,
+      JSON.stringify({ version: 1, records: workspaceRecords }),
+    );
+    return true;
+  } catch {
+    showToast("本地保存失败，请及时导出当前 JSON");
+    return false;
+  }
+}
+
+function stripMatrixLevelLabel(value) {
+  let next = String(value || "").trim();
+  return next
+    .replace(/^(?:A\d+(?:-\d+)?)\.\s*[^｜>/-]*?（\d+\s*条）\s*[｜>/-]?\s*/u, "")
+    .replace(/^(?:A\d+(?:-\d+)?)\.\s*/u, "")
+    .replace(/（\d+\s*条）$/u, "")
+    .trim();
+}
+
+function normalizeScene(scene, index = 0) {
+  const fallbackId = `custom_${String(index + 1).padStart(3, "0")}`;
+  const id = String(scene?.id || fallbackId).trim().toLowerCase();
+  const event = stripMatrixLevelLabel(scene?.event || scene?.text || "未命名场景") || "未命名场景";
+  const category = stripMatrixLevelLabel(scene?.category || "未分类") || "未分类";
+  const mechanism = stripMatrixLevelLabel(scene?.mechanism || "通用情绪触发") || "通用情绪触发";
+  return {
+    id,
+    event,
+    mechanismId: String(scene?.mechanismId || `custom-${id}-mechanism`).trim(),
+    mechanism,
+    categoryId: String(scene?.categoryId || `custom-${id}-category`).trim(),
+    category,
+    color: String(scene?.color || "cyan").trim(),
+  };
+}
+
+function normalizeSceneCollection(scenes) {
+  const used = new Set();
+  let fallback = 1;
+  return (Array.isArray(scenes) ? scenes : [])
+    .map((scene, index) => normalizeScene(scene, index))
+    .map(scene => {
+      let id = scene.id;
+      while (!SCENE_ID_PATTERN.test(id) || used.has(id)) {
+        id = `custom_${String(fallback).padStart(3, "0")}`;
+        fallback += 1;
+      }
+      used.add(id);
+      return {
+        ...scene,
+        id,
+        categoryId: scene.categoryId || `custom-${id}-category`,
+        mechanismId: scene.mechanismId || `custom-${id}-mechanism`,
+      };
+    });
+}
+
+function readSceneLibrary() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(SCENE_STORAGE_KEY) || "null");
+    if (Array.isArray(parsed?.scenes)) return normalizeSceneCollection(parsed.scenes);
+  } catch {
+    // Fall through to defaults.
+  }
+  return normalizeSceneCollection(DEFAULT_SCENE_LIBRARY);
+}
+
+function writeSceneLibrary() {
+  try {
+    localStorage.setItem(
+      SCENE_STORAGE_KEY,
+      JSON.stringify({ version: 1, scenes: SCENE_LIBRARY }),
+    );
+    document.getElementById("sceneLibraryData").textContent =
+      JSON.stringify(SCENE_LIBRARY).replaceAll("<", "\\u003c");
+    return true;
+  } catch {
+    showToast("场景库保存失败，请先导出已完成样本");
+    return false;
+  }
+}
+
+function getSceneById(sceneId) {
+  return SCENE_LIBRARY.find(scene => scene.id === sceneId) || null;
+}
+
+function getNextSceneId() {
+  let index = SCENE_LIBRARY.length + 1;
+  let id = `custom_${String(index).padStart(3, "0")}`;
+  const used = new Set(SCENE_LIBRARY.map(scene => scene.id));
+  while (used.has(id)) {
+    index += 1;
+    id = `custom_${String(index).padStart(3, "0")}`;
+  }
+  return id;
+}
+
+function fillSceneEditorHints() {
+  const categories = [...new Set(SCENE_LIBRARY.map(scene => scene.category).filter(Boolean))];
+  document.getElementById("sceneCategoryHints").replaceChildren(
+    ...categories.map(category => {
+      const option = document.createElement("option");
+      option.value = category;
+      return option;
+    }),
+  );
+
+  const mechanisms = [...new Set(SCENE_LIBRARY.map(scene => scene.mechanism).filter(Boolean))];
+  document.getElementById("sceneMechanismHints").replaceChildren(
+    ...mechanisms.map(mechanism => {
+      const option = document.createElement("option");
+      option.value = mechanism;
+      return option;
+    }),
+  );
+}
+
+function closeSceneEditor() {
+  sceneEditorMode = "create";
+  editingSceneId = null;
+  document.getElementById("sceneEditor").classList.add("hidden");
+  renderSceneLibrary();
+}
+
+function openSceneEditor(scene = null) {
+  sceneEditorMode = scene ? "edit" : "create";
+  editingSceneId = scene?.id || null;
+  fillSceneEditorHints();
+  document.getElementById("sceneEditorTitle").textContent = scene ? "编辑场景" : "新增场景";
+  document.getElementById("sceneEditorId").value = scene?.id || getNextSceneId();
+  document.getElementById("sceneEditorId").disabled = !!scene;
+  document.getElementById("sceneEditorCategory").value = scene?.category || "";
+  document.getElementById("sceneEditorMechanism").value = scene?.mechanism || "";
+  document.getElementById("sceneEditorEvent").value = scene?.event || "";
+  document.getElementById("sceneEditor").classList.remove("hidden");
+  setTimeout(() => document.getElementById(scene ? "sceneEditorEvent" : "sceneEditorId").focus(), 0);
+  renderSceneLibrary();
+}
+
+function saveSceneFromEditor(event) {
+  event.preventDefault();
+  const oldScene = editingSceneId ? getSceneById(editingSceneId) : null;
+  const id = (oldScene?.id || document.getElementById("sceneEditorId").value).trim().toLowerCase();
+  const category = stripMatrixLevelLabel(document.getElementById("sceneEditorCategory").value) || "未分类";
+  const mechanism = stripMatrixLevelLabel(document.getElementById("sceneEditorMechanism").value) || "通用情绪触发";
+  const sceneEvent = stripMatrixLevelLabel(document.getElementById("sceneEditorEvent").value);
+
+  if (!SCENE_ID_PATTERN.test(id)) {
+    alert("场景 ID 需为 3–64 位小写字母、数字、_ 或 -，且以字母或数字开头");
+    return;
+  }
+  if (!sceneEvent) {
+    alert("请填写生活事件");
+    return;
+  }
+  if (!oldScene && SCENE_LIBRARY.some(scene => scene.id === id)) {
+    alert("场景 ID 已存在，请换一个");
+    return;
+  }
+
+  const nextScene = normalizeScene({
+    ...oldScene,
+    id,
+    category,
+    mechanism,
+    event: sceneEvent,
+    categoryId: oldScene && oldScene.category === category
+      ? oldScene.categoryId
+      : `custom-${id}-category`,
+    mechanismId: oldScene && oldScene.mechanism === mechanism
+      ? oldScene.mechanismId
+      : `custom-${id}-mechanism`,
+  });
+
+  if (oldScene) {
+    SCENE_LIBRARY = SCENE_LIBRARY.map(scene => scene.id === oldScene.id ? nextScene : scene);
+  } else {
+    SCENE_LIBRARY = [...SCENE_LIBRARY, nextScene];
+  }
+  if (!writeSceneLibrary()) return;
+  if (selectedScene?.id === nextScene.id) {
+    selectedScene = nextScene;
+    renderSelectedScene();
+    refreshAll(false);
+  }
+  initializeSceneFilters();
+  renderSceneLibrary();
+  updateProgress();
+  showToast(oldScene ? "场景已更新" : "场景已新增");
+  openSceneEditor(oldScene ? nextScene : null);
+}
+
+function deleteScene(scene) {
+  const relatedRecordKeys = Object.keys(workspaceRecords).filter(recordKey =>
+    parseSceneRecordKey(recordKey, workspaceRecords[recordKey]).sceneId === scene.id,
+  );
+  const hasRecord = relatedRecordKeys.length > 0;
+  const suffix = hasRecord ? "，关联的草稿/完成状态也会删除" : "";
+  if (!confirm(`删除场景 ${scene.id}${suffix}？`)) return;
+  SCENE_LIBRARY = SCENE_LIBRARY.filter(item => item.id !== scene.id);
+  relatedRecordKeys.forEach(recordKey => delete workspaceRecords[recordKey]);
+  writeWorkspace();
+  if (!writeSceneLibrary()) return;
+  if (selectedScene?.id === scene.id) {
+    selectedScene = null;
+    renderSelectedScene();
+  }
+  closeSceneEditor();
+  initializeSceneFilters();
+  renderSceneLibrary();
+  updateProgress();
+  showToast("场景已删除");
+}
+
+function resetSceneLibraryToDefault() {
+  if (!confirm("恢复默认场景库？新增和修改过的场景会被替换，已有草稿/完成记录会保留但只统计仍存在的场景。")) return;
+  SCENE_LIBRARY = normalizeSceneCollection(DEFAULT_SCENE_LIBRARY);
+  if (!writeSceneLibrary()) return;
+  selectedScene = selectedScene ? getSceneById(selectedScene.id) : null;
+  closeSceneEditor();
+  initializeSceneFilters();
+  renderSelectedScene();
+  renderSceneLibrary();
+  updateProgress();
+  showToast("已恢复默认场景库");
+}
+
+function getSceneRecord(sceneId, ageBand = getAuthoringAgeBand()) {
+  return workspaceRecords[getSceneRecordKey(sceneId, ageBand)] || null;
+}
+
+function getSceneStatus(sceneId, ageBand = getAuthoringAgeBand()) {
+  return getSceneRecord(sceneId, ageBand)?.status || "unstarted";
+}
+
+function updateProgress() {
+  const ageBand = getAuthoringAgeBand();
+  const knownSceneIds = new Set(SCENE_LIBRARY.map(scene => scene.id));
+  const records = Object.entries(workspaceRecords)
+    .filter(([recordKey, record]) => {
+      const parsedKey = parseSceneRecordKey(recordKey, record);
+      return parsedKey.ageBand === ageBand && knownSceneIds.has(parsedKey.sceneId);
+    })
+    .map(([, record]) => record);
+  const total = SCENE_LIBRARY.length;
+  const completed = records.filter(record => record.status === "completed").length;
+  const draft = records.filter(record => record.status === "draft").length;
+  const unstarted = Math.max(0, total - completed - draft);
+  document.getElementById("progressText").textContent = `${LABELS.age_band[ageBand]} · ${completed} / ${total} 已完成`;
+  document.getElementById("progressFill").style.width = total
+    ? `${(completed / total) * 100}%`
+    : "0%";
+  document.getElementById("statUnstarted").textContent = unstarted;
+  document.getElementById("statDraft").textContent = draft;
+  document.getElementById("statCompleted").textContent = completed;
+  refreshCoverageIfOpen();
+}
+
+function queueAutosave() {
+  if (isHydrating || !selectedScene) return;
+  clearTimeout(autosaveTimer);
+  autosaveTimer = setTimeout(() => persistCurrent("draft", false), 450);
+}
+
+function persistCurrent(status = "draft", announce = true) {
+  if (!selectedScene) {
+    if (announce) showToast("请先从场景库选择一个场景");
+    return false;
+  }
+  const sample = buildSample();
+  const recordKey = getSceneRecordKey(selectedScene.id, sample.age_band);
+  workspaceRecords[recordKey] = {
+    status,
+    updatedAt: new Date().toISOString(),
+    sceneId: selectedScene.id,
+    ageBand: sample.age_band,
+    sample,
+  };
+  const saved = writeWorkspace();
+  updateProgress();
+  renderSceneLibrary();
+  if (announce && saved) {
+    showToast(status === "completed" ? "已保存为完成稿" : "草稿已保存在当前浏览器");
+  }
+  return saved;
+}
+
+function initializeSceneFilters() {
+  const categorySelect = document.getElementById("sceneCategoryFilter");
+  const currentCategory = categorySelect.value || "all";
+  categorySelect.replaceChildren(new Option("全部分类", "all"));
+  [...new Set(SCENE_LIBRARY.map(scene => scene.category))].forEach(category => {
+    categorySelect.add(new Option(category, category));
+  });
+  categorySelect.value = [...categorySelect.options].some(option => option.value === currentCategory)
+    ? currentCategory
+    : "all";
+  fillSceneEditorHints();
+}
+
+function renderSceneLibrary() {
+  const ageBand = getAuthoringAgeBand();
+  const query = document.getElementById("sceneSearch").value.trim().toLowerCase();
+  const category = document.getElementById("sceneCategoryFilter").value;
+  const status = document.getElementById("sceneStatusFilter").value;
+  const filtered = SCENE_LIBRARY.filter(scene => {
+    const haystack = `${scene.id} ${scene.category} ${scene.mechanism} ${scene.event}`.toLowerCase();
+    return (!query || haystack.includes(query))
+      && (category === "all" || scene.category === category)
+      && (status === "all" || getSceneStatus(scene.id, ageBand) === status);
+  });
+
+  document.getElementById("sceneResultCount").textContent = `${LABELS.age_band[ageBand]} · ${filtered.length} 个场景`;
+  const list = document.getElementById("sceneList");
+  if (!filtered.length) {
+    list.innerHTML = `<div class="scene-empty">没有符合当前筛选条件的场景。</div>`;
+    updateProgress();
+    return;
+  }
+
+  list.innerHTML = filtered.map(scene => {
+    const sceneStatus = getSceneStatus(scene.id, ageBand);
+    const statusText = {
+      unstarted: "未开始",
+      draft: "草稿",
+      completed: "已完成",
+    }[sceneStatus];
+    const hasRecord = sceneStatus !== "unstarted";
+    const sceneId = escapeHtml(scene.id);
+    return `
+      <article class="scene-card ${selectedScene?.id === scene.id ? "is-selected" : ""} ${editingSceneId === scene.id ? "is-editing" : ""}">
+        <div class="scene-card-head">
+          <span class="status-label ${sceneStatus}">${statusText}</span>
+          <span class="scene-meta">${sceneId}</span>
+        </div>
+        <h3>${escapeHtml(scene.event)}</h3>
+        <p>分类：${escapeHtml(scene.category)}　机制：${escapeHtml(scene.mechanism)}</p>
+        <div class="scene-card-actions">
+          <button type="button" class="ghost" data-scene-action="edit" data-scene-id="${sceneId}">编辑</button>
+          <button type="button" class="danger" data-scene-action="delete" data-scene-id="${sceneId}">删除</button>
+          ${hasRecord ? `<button type="button" class="ghost" data-scene-action="clear" data-scene-id="${sceneId}">清除记录</button>` : ""}
+          ${hasRecord ? `<button type="button" data-scene-action="new" data-scene-id="${sceneId}">重新构造</button>` : ""}
+          <button type="button" class="${hasRecord ? "primary" : ""}" data-scene-action="${hasRecord ? "resume" : "new"}" data-scene-id="${sceneId}">
+            ${hasRecord ? "继续编辑" : "使用场景"}
+          </button>
+        </div>
+      </article>`;
+  }).join("");
+
+  list.querySelectorAll("[data-scene-action]").forEach(button => {
+    button.addEventListener("click", () => {
+      const scene = SCENE_LIBRARY.find(item => item.id === button.dataset.sceneId);
+      const action = button.dataset.sceneAction;
+      if (!scene) return;
+      if (action === "edit") {
+        openSceneEditor(scene);
+        return;
+      }
+      if (action === "delete") {
+        deleteScene(scene);
+        return;
+      }
+      if (action === "clear") {
+        if (!confirm(`清除 ${LABELS.age_band[ageBand]} / ${scene.id} 的本地草稿和完成状态？`)) return;
+        delete workspaceRecords[getSceneRecordKey(scene.id, ageBand)];
+        writeWorkspace();
+        updateProgress();
+        renderSceneLibrary();
+        return;
+      }
+      if (action === "resume") {
+        resumeScene(scene);
+        return;
+      }
+      if (getSceneRecord(scene.id, ageBand) && !confirm("这会用新的空壳覆盖当前年龄段下的场景记录，确定继续吗？")) {
+        return;
+      }
+      startScene(scene);
+    });
+  });
+  updateProgress();
+}
+
+function openSceneLibrary(status = "all") {
+  syncAgeContextControls(document.getElementById("age_band").value);
+  document.getElementById("sceneStatusFilter").value = status;
+  document.getElementById("sceneOverlay").classList.remove("hidden");
+  renderSceneLibrary();
+  setTimeout(() => document.getElementById("sceneSearch").focus(), 0);
+}
+
+function closeSceneLibrary() {
+  document.getElementById("sceneOverlay").classList.add("hidden");
+}
+
+const COVERAGE_COLOR_MAP = {
+  cyan: { fill: "#9fd9cf", stroke: "#2f8f82", deep: "#0f6a5a" },
+  violet: { fill: "#d2c7ef", stroke: "#7a68b8", deep: "#5b4a9a" },
+  lime: { fill: "#cfe4a8", stroke: "#7aa03a", deep: "#5c7d28" },
+  amber: { fill: "#f0d7a4", stroke: "#b8862d", deep: "#9a5b12" },
+  rose: { fill: "#efc4c8", stroke: "#b5676f", deep: "#9b2c2c" },
+  sky: { fill: "#b9d8ef", stroke: "#4f86ad", deep: "#2f5f84" },
+  mint: { fill: "#c5e8d7", stroke: "#4f9a78", deep: "#1f6f4a" },
+  sand: { fill: "#e6dcc8", stroke: "#a08b63", deep: "#6f5d3d" },
+};
+
+function coverageColorFor(name) {
+  const key = String(name || "cyan").trim().toLowerCase();
+  return COVERAGE_COLOR_MAP[key] || COVERAGE_COLOR_MAP.cyan;
+}
+
+function emptyCoverageStatusCounts() {
+  return { completed: 0, draft: 0, unstarted: 0 };
+}
+
+function addCoverageStatus(counts, scene) {
+  const status = getSceneStatus(scene.id);
+  counts[status] = (counts[status] || 0) + 1;
+}
+
+function coverageCompletionRate(counts, total) {
+  return total ? counts.completed / total : 0;
+}
+
+function coverageGroupKey(category, mechanism) {
+  return `${String(category || "").trim()}::${String(mechanism || "").trim()}`;
+}
+
+function truncateText(text, maxChars) {
+  const value = String(text || "");
+  if (value.length <= maxChars) return value;
+  return `${value.slice(0, Math.max(1, maxChars - 1))}…`;
+}
+
+function getFilteredCoverageScenes() {
+  const query = coverageFilters.query.trim().toLowerCase();
+  const status = coverageFilters.status;
+  return SCENE_LIBRARY.filter(scene => {
+    const haystack = `${scene.id} ${scene.category} ${scene.mechanism} ${scene.event}`.toLowerCase();
+    return (!query || haystack.includes(query))
+      && (status === "all" || getSceneStatus(scene.id) === status);
+  });
+}
+
+function buildCoverageModel(scenes = SCENE_LIBRARY) {
+  const total = scenes.length;
+  const categories = new Map();
+  const mechanisms = [];
+  const statusCounts = emptyCoverageStatusCounts();
+
+  scenes.forEach(scene => {
+    const category = scene.category || "未分类";
+    const mechanism = scene.mechanism || "通用情绪触发";
+    const color = scene.color || "cyan";
+    addCoverageStatus(statusCounts, scene);
+    if (!categories.has(category)) {
+      categories.set(category, {
+        category,
+        color,
+        scenes: [],
+        mechanisms: new Map(),
+        statusCounts: emptyCoverageStatusCounts(),
+      });
+    }
+    const cat = categories.get(category);
+    cat.scenes.push(scene);
+    addCoverageStatus(cat.statusCounts, scene);
+    if (!cat.color) cat.color = color;
+    const mechKey = coverageGroupKey(category, mechanism);
+    if (!cat.mechanisms.has(mechKey)) {
+      cat.mechanisms.set(mechKey, {
+        key: mechKey,
+        category,
+        mechanism,
+        color: cat.color,
+        scenes: [],
+        statusCounts: emptyCoverageStatusCounts(),
+      });
+    }
+    const mech = cat.mechanisms.get(mechKey);
+    mech.scenes.push(scene);
+    addCoverageStatus(mech.statusCounts, scene);
+  });
+
+  const categoryList = [...categories.values()].map(cat => {
+    const mechList = [...cat.mechanisms.values()]
+      .map(mech => ({
+        ...mech,
+        count: mech.scenes.length,
+        completionRate: coverageCompletionRate(mech.statusCounts, mech.scenes.length),
+      }))
+      .sort((a, b) => b.count - a.count || a.mechanism.localeCompare(b.mechanism, "zh"));
+    mechanisms.push(...mechList);
+    return {
+      category: cat.category,
+      color: cat.color,
+      scenes: cat.scenes,
+      count: cat.scenes.length,
+      mechanismCount: mechList.length,
+      statusCounts: cat.statusCounts,
+      completionRate: coverageCompletionRate(cat.statusCounts, cat.scenes.length),
+      mechanisms: mechList,
+    };
+  }).sort((a, b) => b.count - a.count || a.category.localeCompare(b.category, "zh"));
+
+  const completed = statusCounts.completed;
+  const draft = statusCounts.draft;
+  const unstarted = Math.max(0, total - completed - draft);
+
+  return {
+    scenes,
+    total,
+    libraryTotal: SCENE_LIBRARY.length,
+    categoryCount: categoryList.length,
+    mechanismCount: mechanisms.length,
+    completed,
+    draft,
+    unstarted,
+    statusCounts: { completed, draft, unstarted },
+    avgPerCategory: categoryList.length ? total / categoryList.length : 0,
+    categories: categoryList,
+    mechanisms: mechanisms.sort((a, b) => b.count - a.count || a.mechanism.localeCompare(b.mechanism, "zh")),
+  };
+}
+
+function squarifyLayout(items, x, y, width, height) {
+  const nodes = [];
+  const values = items.map(item => Math.max(item.value, 0));
+  const total = values.reduce((sum, value) => sum + value, 0);
+  if (!total || width <= 0 || height <= 0) return nodes;
+
+  let remaining = items.map((item, index) => ({ item, value: values[index] }));
+  let rx = x;
+  let ry = y;
+  let rw = width;
+  let rh = height;
+
+  const worst = (row, length) => {
+    if (!row.length || length <= 0) return Infinity;
+    const sum = row.reduce((acc, entry) => acc + entry.value, 0);
+    const areas = row.map(entry => (entry.value * length * length) / sum);
+    const maxArea = Math.max(...areas);
+    const minArea = Math.min(...areas);
+    return Math.max(
+      (maxArea * sum * sum) / (length * length * minArea * minArea),
+      (length * length * maxArea) / (sum * sum),
+    );
+  };
+
+  const layoutRow = (row, horizontal, remainingIncludingRow) => {
+    const sum = row.reduce((acc, entry) => acc + entry.value, 0);
+    const remainingSum = remainingIncludingRow.reduce((acc, entry) => acc + entry.value, 0);
+    if (!sum || !remainingSum) return;
+    if (horizontal) {
+      const rowHeight = (sum / remainingSum) * rh;
+      let offset = rx;
+      row.forEach(entry => {
+        const w = (entry.value / sum) * rw;
+        nodes.push({
+          ...entry.item,
+          x: offset,
+          y: ry,
+          width: w,
+          height: rowHeight,
+        });
+        offset += w;
+      });
+      ry += rowHeight;
+      rh -= rowHeight;
+    } else {
+      const rowWidth = (sum / remainingSum) * rw;
+      let offset = ry;
+      row.forEach(entry => {
+        const h = (entry.value / sum) * rh;
+        nodes.push({
+          ...entry.item,
+          x: rx,
+          y: offset,
+          width: rowWidth,
+          height: h,
+        });
+        offset += h;
+      });
+      rx += rowWidth;
+      rw -= rowWidth;
+    }
+  };
+
+  while (remaining.length) {
+    const horizontal = rw >= rh;
+    const length = horizontal ? rw : rh;
+    const row = [remaining[0]];
+    let i = 1;
+    while (i < remaining.length) {
+      const next = remaining[i];
+      const currentWorst = worst(row, length);
+      const nextWorst = worst([...row, next], length);
+      if (nextWorst <= currentWorst) {
+        row.push(next);
+        i += 1;
+      } else break;
+    }
+    const remainingIncludingRow = remaining;
+    remaining = remaining.slice(row.length);
+    layoutRow(row, horizontal, remainingIncludingRow);
+  }
+  return nodes;
+}
+
+function layoutCoverageTreemap(model, width, height) {
+  const pad = 2;
+  const categoryNodes = squarifyLayout(
+    model.categories.map(cat => ({
+      type: "category",
+      category: cat.category,
+      color: cat.color,
+      value: cat.count,
+      label: cat.category,
+      count: cat.count,
+      mechanismCount: cat.mechanismCount,
+      statusCounts: cat.statusCounts,
+      completionRate: cat.completionRate,
+    })),
+    pad,
+    pad,
+    Math.max(width - pad * 2, 0),
+    Math.max(height - pad * 2, 0),
+  );
+
+  const leaves = [];
+  categoryNodes.forEach(catNode => {
+    const category = model.categories.find(item => item.category === catNode.category);
+    if (!category) return;
+    const innerPad = 3;
+    const header = Math.min(22, Math.max(16, catNode.height * 0.18));
+    const mechNodes = squarifyLayout(
+      category.mechanisms.map(mech => ({
+        type: "mechanism",
+        category: category.category,
+        mechanism: mech.mechanism,
+        mechanismKey: mech.key,
+        color: category.color,
+        value: mech.count,
+        label: mech.mechanism,
+        count: mech.count,
+        statusCounts: mech.statusCounts,
+        completionRate: mech.completionRate,
+      })),
+      catNode.x + innerPad,
+      catNode.y + header,
+      Math.max(catNode.width - innerPad * 2, 0),
+      Math.max(catNode.height - header - innerPad, 0),
+    );
+    leaves.push({
+      type: "category-frame",
+      category: category.category,
+      color: category.color,
+      x: catNode.x,
+      y: catNode.y,
+      width: catNode.width,
+      height: catNode.height,
+      header,
+      count: category.count,
+      mechanismCount: category.mechanismCount,
+      statusCounts: category.statusCounts,
+      completionRate: category.completionRate,
+      label: category.category,
+    });
+    leaves.push(...mechNodes);
+  });
+  return leaves;
+}
+
+function coverageStatusText(status) {
+  return {
+    unstarted: "未开始",
+    draft: "草稿",
+    completed: "已完成",
+  }[status] || "未开始";
+}
+
+function isCoverageOpen() {
+  return !document.getElementById("coverageOverlay").classList.contains("hidden");
+}
+
+function refreshCoverageIfOpen() {
+  if (isCoverageOpen()) renderCoverageView();
+}
+
+function openCoverageView() {
+  closeSceneLibrary();
+  syncAgeContextControls(document.getElementById("age_band").value);
+  document.getElementById("coverageOverlay").classList.remove("hidden");
+  renderCoverageView();
+  setTimeout(() => document.getElementById("coverageSearch").focus(), 0);
+}
+
+function closeCoverageView() {
+  document.getElementById("coverageOverlay").classList.add("hidden");
+}
+
+function selectCoverageNode(selection) {
+  coverageSelection = selection;
+  renderCoverageView();
+}
+
+function syncCoverageFilterControls() {
+  document.getElementById("coverageSearch").value = coverageFilters.query;
+  document.getElementById("coverageStatusFilter").value = coverageFilters.status;
+}
+
+function setCoverageFilters(next) {
+  coverageFilters = { ...coverageFilters, ...next };
+  coverageSelection = null;
+  renderCoverageView();
+}
+
+function resolveCoverageSelection(model) {
+  if (!coverageSelection) return null;
+  if (coverageSelection.type === "category") {
+    const category = model.categories.find(item => item.category === coverageSelection.category);
+    return category
+      ? { type: "category", category: category.category, payload: category }
+      : null;
+  }
+  if (coverageSelection.type === "mechanism") {
+    const mechanism = model.mechanisms.find(item =>
+      item.category === coverageSelection.category
+      && (item.key === coverageSelection.mechanismKey || item.mechanism === coverageSelection.mechanism)
+    );
+    return mechanism
+      ? { type: "mechanism", category: mechanism.category, mechanism: mechanism.mechanism, payload: mechanism }
+      : null;
+  }
+  return null;
+}
+
+function renderCoverageStats(model) {
+  const ageBand = getAuthoringAgeBand();
+  const hasFilter = coverageFilters.query.trim() || coverageFilters.status !== "all";
+  const matchedLabel = hasFilter ? `匹配 / 总库 ${model.libraryTotal}` : "场景总数";
+  document.getElementById("coverageStats").innerHTML = `
+    <div class="coverage-stat"><strong>${model.total}</strong><span>${matchedLabel}</span></div>
+    <div class="coverage-stat"><strong>${LABELS.age_band[ageBand].split(" ")[0]}</strong><span>当前年龄段</span></div>
+    <div class="coverage-stat"><strong>${model.categoryCount}</strong><span>分类数量</span></div>
+    <div class="coverage-stat"><strong>${model.mechanismCount}</strong><span>机制组数</span></div>
+    <div class="coverage-stat">
+      <strong>${model.completed}</strong>
+      <span>完成进度</span>
+      <div class="status-triple">
+        <span>完成 <b>${model.completed}</b></span>
+        <span>草稿 <b>${model.draft}</b></span>
+        <span>未开始 <b>${model.unstarted}</b></span>
+      </div>
+    </div>
+  `;
+}
+
+function renderCoverageTreemap(model, selection) {
+  const host = document.getElementById("coverageTreemapHost");
+  if (!model.total) {
+    host.innerHTML = `<div class="coverage-empty-hint">场景库为空，请先新增场景。</div>`;
+    return;
+  }
+
+  const width = Math.max(host.clientWidth || 640, 320);
+  const height = Math.max(280, Math.min(420, Math.round(width * 0.55)));
+  const nodes = layoutCoverageTreemap(model, width, height);
+
+  const svgParts = [
+    `<svg class="coverage-treemap-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="场景分布树图">`,
+  ];
+
+  nodes.forEach(node => {
+    const palette = coverageColorFor(node.color);
+    if (node.type === "category-frame") {
+      const selected = selection?.type === "category" && selection.category === node.category;
+      const titleMax = Math.max(3, Math.floor((node.width - 18) / 12));
+      const subtitle = `${node.mechanismCount} 机制 · ${node.count} 场景`;
+      const progressWidth = Math.max(0, (node.width - 16) * (node.completionRate || 0));
+      svgParts.push(`
+        <g class="tm-node ${selected ? "is-selected" : ""}" data-tm-type="category" data-tm-category="${escapeHtml(node.category)}">
+          <rect x="${node.x}" y="${node.y}" width="${Math.max(node.width, 0)}" height="${Math.max(node.height, 0)}"
+            fill="${palette.fill}" stroke="${palette.stroke}" stroke-width="1.2" rx="8"></rect>
+          ${node.width > 62 && node.height > 34 ? `<text class="tm-frame-title" x="${node.x + 8}" y="${node.y + 14}" font-size="12">${escapeHtml(truncateText(node.label, titleMax))}</text>` : ""}
+          ${node.width > 96 && node.height > 50 ? `<text class="tm-subtitle" x="${node.x + 8}" y="${node.y + 29}" font-size="10">${escapeHtml(subtitle)}</text>` : ""}
+          ${node.width > 72 && node.height > 44 ? `<rect x="${node.x + 8}" y="${node.y + node.header - 6}" width="${Math.max(node.width - 16, 0)}" height="3" rx="2" fill="rgba(255,255,255,0.48)"></rect>` : ""}
+          ${node.width > 72 && node.height > 44 ? `<rect x="${node.x + 8}" y="${node.y + node.header - 6}" width="${progressWidth}" height="3" rx="2" fill="${palette.deep}"></rect>` : ""}
+        </g>
+      `);
+      return;
+    }
+
+    if (node.width < 8 || node.height < 8) return;
+    const selected = selection?.type === "mechanism"
+      && selection.category === node.category
+      && (selection.payload?.key === node.mechanismKey || selection.mechanism === node.mechanism);
+    const showLabel = node.width > 54 && node.height > 28;
+    const labelMax = Math.max(3, Math.floor((node.width - 12) / 11));
+    const countLabel = `${node.count} 条 · ${Math.round((node.completionRate || 0) * 100)}%`;
+    svgParts.push(`
+      <g class="tm-node ${selected ? "is-selected" : ""}"
+        data-tm-type="mechanism"
+        data-tm-category="${escapeHtml(node.category)}"
+        data-tm-mechanism="${escapeHtml(node.mechanism)}"
+        data-tm-mechanism-key="${escapeHtml(node.mechanismKey || "")}">
+        <rect x="${node.x}" y="${node.y}" width="${Math.max(node.width - 1, 0)}" height="${Math.max(node.height - 1, 0)}"
+          fill="#fffdf8" fill-opacity="0.72" stroke="${palette.deep}" stroke-width="1" rx="5"></rect>
+        ${showLabel ? `<text x="${node.x + 6}" y="${node.y + 14}" font-size="11">${escapeHtml(truncateText(node.label, labelMax))}</text>` : ""}
+        ${showLabel ? `<text class="tm-subtitle" x="${node.x + 6}" y="${node.y + 28}" font-size="10">${escapeHtml(countLabel)}</text>` : ""}
+      </g>
+    `);
+  });
+
+  svgParts.push("</svg>");
+  host.innerHTML = svgParts.join("");
+
+  host.querySelectorAll(".tm-node").forEach(node => {
+    node.addEventListener("click", event => {
+      event.stopPropagation();
+      const type = node.dataset.tmType;
+      if (type === "category") {
+        selectCoverageNode({ type: "category", category: node.dataset.tmCategory });
+        return;
+      }
+      selectCoverageNode({
+        type: "mechanism",
+        category: node.dataset.tmCategory,
+        mechanism: node.dataset.tmMechanism,
+        mechanismKey: node.dataset.tmMechanismKey,
+      });
+    });
+  });
+}
+
+function renderCoverageStatusPills(counts) {
+  return `
+    <div class="coverage-pills">
+      <span class="coverage-pill">完成 ${counts.completed || 0}</span>
+      <span class="coverage-pill">草稿 ${counts.draft || 0}</span>
+      <span class="coverage-pill">未开始 ${counts.unstarted || 0}</span>
+    </div>
+  `;
+}
+
+function renderCoverageProgress(rate) {
+  const percent = Math.round((rate || 0) * 100);
+  return `
+    <div class="coverage-mini-progress" aria-label="完成率 ${percent}%">
+      <span style="width:${percent}%"></span>
+    </div>
+  `;
+}
+
+function renderCoverageDetail(model, selection) {
+  const detail = document.getElementById("coverageDetail");
+  const title = document.getElementById("coverageDetailTitle");
+  const hint = document.getElementById("coverageDetailHint");
+
+  let scenes = SCENE_LIBRARY;
+  let summaryHtml = "";
+
+  if (!selection) {
+    title.textContent = "总览明细";
+    hint.textContent = "未选中 · 点击左侧查看";
+    summaryHtml = `
+      <div class="coverage-detail-summary">
+        <div class="kv"><span>场景总数</span><strong>${model.total}</strong></div>
+        <div class="kv"><span>分类 / 机制组</span><strong>${model.categoryCount} / ${model.mechanismCount}</strong></div>
+        <div class="kv"><span>完成 / 草稿 / 未开始</span><strong>${model.completed} / ${model.draft} / ${model.unstarted}</strong></div>
+        <div class="kv"><span>平均每类场景</span><strong>${model.avgPerCategory.toFixed(1)}</strong></div>
+        ${renderCoverageStatusPills(model.statusCounts)}
+        ${renderCoverageProgress(coverageCompletionRate(model.statusCounts, model.total))}
+      </div>
+      <div class="coverage-empty-hint" style="padding-top:8px">点击树图中的分类或机制，查看该节点下的场景列表。</div>
+    `;
+    scenes = model.scenes.slice(0, 12);
+  } else if (selection.type === "category") {
+    const cat = selection.payload;
+    title.textContent = cat.category;
+    hint.textContent = "已选分类";
+    const ratio = model.total ? ((cat.count / model.total) * 100).toFixed(1) : "0.0";
+    summaryHtml = `
+      <div class="coverage-detail-summary">
+        <div class="kv"><span>分类</span><strong>${escapeHtml(cat.category)}</strong></div>
+        <div class="kv"><span>机制数</span><strong>${cat.mechanismCount}</strong></div>
+        <div class="kv"><span>场景数</span><strong>${cat.count}</strong></div>
+        <div class="kv"><span>占比</span><strong>${ratio}%</strong></div>
+        <div class="kv"><span>完成率</span><strong>${Math.round(cat.completionRate * 100)}%</strong></div>
+        ${renderCoverageStatusPills(cat.statusCounts)}
+        ${renderCoverageProgress(cat.completionRate)}
+      </div>
+    `;
+    scenes = cat.scenes;
+  } else {
+    const mech = selection.payload;
+    title.textContent = mech.mechanism;
+    hint.textContent = "已选机制";
+    const ratio = model.total ? ((mech.count / model.total) * 100).toFixed(1) : "0.0";
+    summaryHtml = `
+      <div class="coverage-detail-summary">
+        <div class="kv"><span>所属分类</span><strong>${escapeHtml(mech.category)}</strong></div>
+        <div class="kv"><span>机制</span><strong>${escapeHtml(mech.mechanism)}</strong></div>
+        <div class="kv"><span>场景数</span><strong>${mech.count}</strong></div>
+        <div class="kv"><span>占比</span><strong>${ratio}%</strong></div>
+        <div class="kv"><span>完成率</span><strong>${Math.round(mech.completionRate * 100)}%</strong></div>
+        ${renderCoverageStatusPills(mech.statusCounts)}
+        ${renderCoverageProgress(mech.completionRate)}
+      </div>
+    `;
+    scenes = mech.scenes;
+  }
+
+  const listHtml = scenes.length
+    ? `<div class="coverage-scene-list">${scenes.map(scene => {
+        const status = getSceneStatus(scene.id);
+        const hasRecord = status !== "unstarted";
+        const sceneId = escapeHtml(scene.id);
+        return `
+          <article class="coverage-scene-item">
+            <div class="coverage-scene-item-top">
+              <span class="scene-meta">${sceneId}</span>
+              <span class="status-label ${status}">${coverageStatusText(status)}</span>
+            </div>
+            <p>${escapeHtml(scene.event)}</p>
+            <div class="coverage-scene-item-top">
+              <span class="scene-meta">${escapeHtml(scene.category)} · ${escapeHtml(scene.mechanism)}</span>
+              <button type="button" class="${hasRecord ? "primary" : ""}" data-coverage-scene-action="${hasRecord ? "resume" : "start"}" data-scene-id="${sceneId}">
+                ${hasRecord ? "继续写作" : "用此场景开始写作"}
+              </button>
+            </div>
+          </article>
+        `;
+      }).join("")}</div>`
+    : `<div class="coverage-empty-hint">该节点下暂无场景。</div>`;
+
+  detail.innerHTML = summaryHtml + listHtml;
+  detail.querySelectorAll("[data-coverage-scene-action]").forEach(button => {
+    button.addEventListener("click", () => {
+      const scene = getSceneById(button.dataset.sceneId);
+      if (!scene) return;
+      const action = button.dataset.coverageSceneAction;
+      closeCoverageView();
+      if (action === "resume") resumeScene(scene);
+      else startScene(scene);
+    });
+  });
+}
+
+function renderCoverageRankBars(rows, maxValue, color) {
+  if (!rows.length) return `<div class="coverage-empty-hint">暂无数据</div>`;
+  const peak = maxValue || Math.max(...rows.map(row => row.value), 1);
+  return rows.map(row => `
+    <div class="coverage-bar-row" title="${escapeHtml(row.label)}：${row.value}">
+      <div class="label">${escapeHtml(row.label)}</div>
+      <div class="coverage-bar-track">
+        <div class="coverage-bar-fill" style="width:${(row.value / peak) * 100}%;background:${color}"></div>
+      </div>
+      <div class="value">${row.value}</div>
+    </div>
+  `).join("");
+}
+
+function renderCoverageRanks(model) {
+  const mostCategories = [...model.categories].slice(0, 5);
+  const todoCategories = [...model.categories]
+    .sort((a, b) => (b.statusCounts.unstarted - a.statusCounts.unstarted) || b.count - a.count || a.category.localeCompare(b.category, "zh"))
+    .slice(0, 5);
+  const lowMechanisms = [...model.mechanisms]
+    .sort((a, b) => a.count - b.count || a.mechanism.localeCompare(b.mechanism, "zh"))
+    .slice(0, 8);
+  const maxCat = Math.max(...model.categories.map(item => item.count), 1);
+  const maxTodo = Math.max(...todoCategories.map(item => item.statusCounts.unstarted), 1);
+  const maxLowMech = Math.max(...lowMechanisms.map(item => item.count), 1);
+
+  document.getElementById("coverageRanks").innerHTML = `
+    <div class="coverage-rank-card">
+      <h3>场景最多的分类</h3>
+      ${renderCoverageRankBars(
+        mostCategories.map(item => ({ label: item.category, value: item.count })),
+        maxCat,
+        coverageColorFor(mostCategories[0]?.color).deep,
+      )}
+    </div>
+    <div class="coverage-rank-card">
+      <h3>待完成最多的分类</h3>
+      ${renderCoverageRankBars(
+        todoCategories.map(item => ({ label: item.category, value: item.statusCounts.unstarted })),
+        maxTodo,
+        "#9a5b12",
+      )}
+    </div>
+    <div class="coverage-rank-card">
+      <h3>低覆盖机制</h3>
+      ${renderCoverageRankBars(
+        lowMechanisms.map(item => ({ label: `${item.category} / ${item.mechanism}`, value: item.count })),
+        maxLowMech,
+        coverageColorFor(lowMechanisms[0]?.color).deep,
+      )}
+    </div>
+  `;
+}
+
+function renderCoverageView() {
+  const model = buildCoverageModel(getFilteredCoverageScenes());
+  const selection = resolveCoverageSelection(model);
+  if (coverageSelection && !selection) coverageSelection = null;
+  syncCoverageFilterControls();
+  renderCoverageStats(model);
+  renderCoverageTreemap(model, selection);
+  renderCoverageDetail(model, selection);
+  renderCoverageRanks(model);
+}
+
+function renderSelectedScene() {
+  const card = document.getElementById("selectedSceneCard");
+  if (!selectedScene) {
+    card.classList.add("empty");
+    document.getElementById("selectedSceneTitle").textContent = "尚未选择场景";
+    document.getElementById("selectedSceneDescription").textContent =
+      "先选择一个生活事件，再围绕它构造有前文依赖、末轮有评测考点的多轮对话。";
+    document.getElementById("selectedSceneMeta").replaceChildren();
+    return;
+  }
+  card.classList.remove("empty");
+  document.getElementById("selectedSceneTitle").textContent = selectedScene.event;
+  document.getElementById("selectedSceneDescription").textContent =
+    "场景库提供跨年龄段生活事件；年龄段会优先决定对话语言风格与生活细节。";
+  const meta = document.getElementById("selectedSceneMeta");
+  meta.replaceChildren(
+    ...[selectedScene.id, selectedScene.category, selectedScene.mechanism].map(value => {
+      const span = document.createElement("span");
+      span.className = "scene-meta";
+      span.textContent = value;
+      return span;
+    }),
+  );
+}
+
+function sceneDefaults(scene) {
+  const scene_type =
+    SCENE_TYPE_OVERRIDES[scene.id] ||
+    SCENE_TYPE_OVERRIDES[scene.mechanismId] ||
+    CATEGORY_DEFAULT_SCENE_TYPES[scene.category] ||
+    "social_conflict";
+  return {
+    scene_type,
+  };
+}
+
+function startScene(scene) {
+  const ageBand = getAuthoringAgeBand();
+  const defaults = sceneDefaults(scene);
+  selectedScene = scene;
+  isHydrating = true;
+  setAuthoringAgeBand(ageBand, true);
+  document.getElementById("sample_id").value = `core_${ageBand}_${scene.id.replace("-", "_")}`;
+  document.getElementById("revision").value = 1;
+  refreshSceneOptions();
+  document.getElementById("scene_type").value = defaults.scene_type;
+  document.getElementById("emotion_valence").value = "negative";
+  Object.assign(authoringState, {
+    situation_summary: `用户经历“${scene.event}”，末轮需要体现${scene.mechanism}带来的真实情绪信号。`,
+    context_dependencies: [
+      "语言和生活细节需匹配当前 age_band / specific_age",
+      `${scene.mechanism}是本条对话必须保留的前文依赖`,
+    ],
+    valid_response_directions: [
+      "先接住用户此刻的情绪和事件重量",
+      "根据末轮信号决定留白还是继续参与",
+    ],
+    forbidden_response_patterns: [
+      "忽略事件直接给建议",
+      "用统一热情覆盖用户的表达节奏",
+    ],
+    human_only: false,
+    review_status: "draft",
+    notes: `[选题来源] scene/${scene.id}｜分类：${scene.category}｜机制：${scene.mechanism}`,
+  });
+  document.getElementById("turnCountTemplate").value = "7";
+  history = createEmptyHistory(7);
+  applyRedlineLocks();
+  renderSelectedScene();
+  refreshAll();
+  isHydrating = false;
+  persistCurrent("draft", false);
+  closeCoverageView();
+  closeSceneLibrary();
+  showToast(`${scene.id} 已带入，开始写对话`);
+}
+
+function resumeScene(scene) {
+  const ageBand = getAuthoringAgeBand();
+  const record = getSceneRecord(scene.id, ageBand);
+  if (!record?.sample) return startScene(scene);
+  selectedScene = scene;
+  applySampleObject(record.sample);
+  renderSelectedScene();
+  closeCoverageView();
+  closeSceneLibrary();
+  showToast(`已恢复 ${LABELS.age_band[ageBand]} / ${scene.id} 的${record.status === "completed" ? "完成稿" : "草稿"}`);
+}
+
+function defaultAuthoringState() {
+  return {
+    situation_summary: "",
+    context_dependencies: ["语言和生活细节需匹配当前 age_band / specific_age"],
+    valid_response_directions: ["先接住用户此刻的情绪和事件重量", "根据末轮信号决定留白还是继续参与"],
+    forbidden_response_patterns: ["忽略事件直接给建议"],
+    human_only: false,
+    review_status: "draft",
+    notes: "",
+  };
+}
+
+const authoringState = defaultAuthoringState();
+
+function buildSample() {
+  const scene = document.getElementById("scene_type").value;
+  const sample = {
+    schema_version: "1.0",
+    sample_id: document.getElementById("sample_id").value.trim(),
+    revision: Number(document.getElementById("revision").value) || 1,
+    language: "zh-CN",
+    age_band: document.getElementById("age_band").value,
+    specific_age: Number(document.getElementById("specific_age").value),
+    scene_type: scene,
+    emotion_valence: document.getElementById("emotion_valence").value,
+    history: history.map(t => ({ role: t.role, content: (t.content || "").trim() })),
+    target: { role: "supporter", min_sentences: 1, max_sentences: 3, max_chars: 40 },
+    authoring: {
+      situation_summary: authoringState.situation_summary.trim()
+        || (selectedScene
+          ? `用户经历“${selectedScene.event}”，末轮需要体现${selectedScene.mechanism}带来的真实情绪信号。`
+          : "围绕当前场景写一条有前文依赖的多轮陪伴对话。"),
+      context_dependencies: (authoringState.context_dependencies.filter(Boolean).length
+        ? authoringState.context_dependencies.filter(Boolean)
+        : defaultAuthoringState().context_dependencies),
+      valid_response_directions: (authoringState.valid_response_directions.filter(Boolean).length >= 2
+        ? authoringState.valid_response_directions.filter(Boolean)
+        : defaultAuthoringState().valid_response_directions),
+      forbidden_response_patterns: (authoringState.forbidden_response_patterns.filter(Boolean).length
+        ? authoringState.forbidden_response_patterns.filter(Boolean)
+        : defaultAuthoringState().forbidden_response_patterns),
+      human_only: !!authoringState.human_only,
+      review_status: authoringState.review_status || "draft",
+    }
+  };
+
+  const notes = authoringState.notes.trim();
+  if (notes) sample.authoring.notes = notes;
+
+  return sample;
+}
+
+function validate(sample) {
+  const issues = [];
+  const idOk = /^[a-z0-9][a-z0-9_-]{5,63}$/.test(sample.sample_id);
+  if (!idOk) issues.push({ level: "err", msg: "sample_id 需 6–64 位，小写字母/数字/_/-，且不以符号开头" });
+  if (!Number.isInteger(sample.revision) || sample.revision < 1) {
+    issues.push({ level: "err", msg: "revision 必须是大于等于 1 的整数" });
+  }
+
+  const [amin, amax] = AGE_RANGE[sample.age_band];
+  if (!Number.isInteger(sample.specific_age) || sample.specific_age < amin || sample.specific_age > amax) {
+    issues.push({ level: "err", msg: `specific_age 与 age_band 不符，应为 ${amin}–${amax}` });
+  }
+
+  const allowedScenes = Object.keys(LABELS.scene);
+  if (!allowedScenes.includes(sample.scene_type)) {
+    issues.push({ level: "err", msg: "scene_type 不在允许范围内" });
+  }
+
+  if (!LABELS.emotion_valence[sample.emotion_valence]) {
+    issues.push({ level: "err", msg: "emotion_valence 不在允许范围内" });
+  }
+
+  const h = sample.history;
+  if (h.length < 6 || h.length > 12) issues.push({ level: "err", msg: `history 长度须为 6–12，当前 ${h.length}` });
+  if (h.length && h[h.length - 1].role !== "user") issues.push({ level: "err", msg: "history 最后一条必须是 user" });
+
+  for (let i = 0; i < h.length; i++) {
+    if (!h[i].content) issues.push({ level: "err", msg: `第 ${i + 1} 轮内容为空` });
+    const max = h[i].role === "user" ? 500 : 200;
+    if ((h[i].content || "").length > max) issues.push({ level: "err", msg: `第 ${i + 1} 轮超出字数上限 ${max}` });
+    if (i > 0 && h[i].role === h[i - 1].role) issues.push({ level: "err", msg: `第 ${i}–${i + 1} 轮角色未交替` });
+  }
+
+  // 奇偶起始规则：奇数长度从 user，偶数长度从 supporter
+  if (h.length >= 6) {
+    const expectStart = h.length % 2 === 1 ? "user" : "supporter";
+    if (h[0].role !== expectStart) {
+      issues.push({ level: "err", msg: `${h.length} 轮应以 ${expectStart} 开头（schema 交替约束）` });
+    }
+  }
+
+  if (!issues.length) issues.push({ level: "ok", msg: "通过本地 schema 规则检查，可以导出" });
+  return issues;
+}
+
+function validateWithWorkspace(sample) {
+  const issues = validate(sample).filter(issue => issue.level !== "ok");
+  const currentRecordKey = selectedScene
+    ? getSceneRecordKey(selectedScene.id, sample.age_band)
+    : null;
+  const duplicate = Object.entries(workspaceRecords).find(
+    ([recordKey, record]) =>
+      recordKey !== currentRecordKey
+      && record?.sample?.sample_id
+      && record.sample.sample_id === sample.sample_id,
+  );
+  if (duplicate) {
+    issues.push({ level: "err", msg: `sample_id 已被 ${duplicate[0]} 使用` });
+  }
+  if (!issues.length) {
+    issues.push({ level: "ok", msg: "通过本地 schema 规则检查，可以保存为完成稿" });
+  }
+  return issues;
+}
+
+function updatePreview() {
+  const sample = buildSample();
+  const issues = validateWithWorkspace(sample);
+  const hasErr = issues.some(i => i.level === "err");
+  const badge = document.getElementById("statusBadge");
+  if (hasErr) {
+    badge.className = "badge err";
+    badge.textContent = `${issues.filter(i => i.level === "err").length} 个问题`;
+  } else {
+    badge.className = "badge ok";
+    badge.textContent = "可导出";
+  }
+}
+
+function refreshAll() {
+  applyAgeHint();
+  applyRedlineLocks();
+  renderHistory();
+  updatePreview();
+}
+
+function addTurn(role) {
+  if (history.length >= 12) return alert("最多 12 轮");
+  if (history.length && history[history.length - 1].role === role) {
+    return alert("必须严格交替，不能连续两轮同一角色");
+  }
+  history.push({ role, content: "" });
+  refreshAll();
+}
+
+function createEmptyHistory(count) {
+  const startRole = count % 2 === 1 ? "user" : "supporter";
+  return Array.from({ length: count }, (_, index) => ({
+    role: index % 2 === 0
+      ? startRole
+      : (startRole === "user" ? "supporter" : "user"),
+    content: "",
+  }));
+}
+
+function seedTurns(force = false) {
+  const count = Number(document.getElementById("turnCountTemplate").value) || 7;
+  if (!force && history.some(turn => turn.content.trim()) && !confirm(`重建为 ${count} 轮会清空当前对话，确定继续吗？`)) {
+    return;
+  }
+  history = createEmptyHistory(count);
+  refreshAll();
+  queueAutosave();
+}
+
+function loadExample() {
+  isHydrating = true;
+  selectedScene = null;
+  document.getElementById("sample_id").value = "workplace_lonely_001";
+  document.getElementById("revision").value = 1;
+  refreshSceneOptions();
+  document.getElementById("scene_type").value = "hesitant_low_energy";
+  document.getElementById("age_band").value = "workplace";
+  document.getElementById("specific_age").value = 28;
+  syncAgeContextControls("workplace");
+  document.getElementById("emotion_valence").value = "negative";
+  Object.assign(authoringState, {
+    situation_summary: "职场人周末看到朋友聚会合照，欲言又止地说没事。",
+    human_only: false,
+    review_status: "draft",
+    notes: "Demo 示例，可直接改。",
+    context_dependencies: ["合照是从别人朋友圈看到的", "用户说「还行吧」但语气收着"],
+    valid_response_directions: ["轻轻确认被落下的感觉", "留白，给对方继续说的门"],
+    forbidden_response_patterns: ["连珠追问为什么不去", "过度热情安慰"],
+  });
+
+  history = [
+    { role: "user", content: "在吗" },
+    { role: "supporter", content: "在的。" },
+    { role: "user", content: "今天周末，刷朋友圈。" },
+    { role: "supporter", content: "嗯。" },
+    { role: "user", content: "他们又聚了。照片里没有我。" },
+    { role: "supporter", content: "你看到了。" },
+    { role: "user", content: "没事…算了，不说了。还行吧。" }
+  ];
+
+  applyRedlineLocks();
+  renderSelectedScene();
+  refreshAll();
+  isHydrating = false;
+  showToast("已填入示例；示例不会计入场景进度");
+}
+
+function resetAll(ask = true) {
+  if (ask && !confirm("清空当前表单？已保存的场景草稿不会被删除。")) return;
+  isHydrating = true;
+  selectedScene = null;
+  document.getElementById("sample_id").value = "";
+  document.getElementById("revision").value = 1;
+  refreshSceneOptions();
+  document.getElementById("age_band").value = "preschool";
+  document.getElementById("specific_age").value = 4;
+  syncAgeContextControls("preschool");
+  document.getElementById("emotion_valence").value = "negative";
+  Object.assign(authoringState, defaultAuthoringState());
+  document.getElementById("turnCountTemplate").value = "7";
+  history = createEmptyHistory(7);
+  renderSelectedScene();
+  refreshAll();
+  isHydrating = false;
+}
+
+function downloadText(content, filename, type) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function exportJson() {
+  const sample = buildSample();
+  const issues = validateWithWorkspace(sample).filter(i => i.level === "err");
+  if (issues.length) {
+    showToast(`还有 ${issues.length} 个校验问题：${issues[0].msg}`);
+    return;
+  }
+  if (selectedScene) persistCurrent("completed", false);
+  downloadText(
+    `${JSON.stringify(sample, null, 2)}\n`,
+    `${sample.sample_id || "sample"}.json`,
+    "application/json;charset=utf-8",
+  );
+  updateProgress();
+  renderSceneLibrary();
+  showToast("当前样本已通过检查并导出");
+}
+
+function exportCompletedJsonl() {
+  const completedRecords = Object.values(workspaceRecords)
+    .filter(record => record.status === "completed" && record.sample);
+  if (!completedRecords.length) {
+    showToast("还没有已完成样本");
+    return;
+  }
+  const invalid = completedRecords.filter(record =>
+    validate(record.sample).some(issue => issue.level === "err"),
+  );
+  if (invalid.length) {
+    showToast(`${invalid.length} 条完成稿已不符合当前规则，请重新打开检查`);
+    return;
+  }
+  const ids = completedRecords.map(record => record.sample.sample_id);
+  if (new Set(ids).size !== ids.length) {
+    showToast("完成稿中存在重复 sample_id，请先修正");
+    return;
+  }
+  const jsonl = `${completedRecords.map(record => JSON.stringify(record.sample)).join("\n")}\n`;
+  downloadText(
+    jsonl,
+    `已完成_${completedRecords.length}条.jsonl`,
+    "application/x-ndjson;charset=utf-8",
+  );
+  showToast(`已导出 ${completedRecords.length} 条完成样本`);
+}
+
+function completeAndNext() {
+  if (!selectedScene) {
+    showToast("请先选择一个场景");
+    return;
+  }
+  const sample = buildSample();
+  const errors = validateWithWorkspace(sample).filter(issue => issue.level === "err");
+  if (errors.length) {
+    showToast(`还差 ${errors.length} 项：${errors[0].msg}`);
+    return;
+  }
+  const currentIndex = SCENE_LIBRARY.findIndex(scene => scene.id === selectedScene.id);
+  persistCurrent("completed", false);
+  const ageBand = sample.age_band;
+  const orderedCandidates = [
+    ...SCENE_LIBRARY.slice(currentIndex + 1),
+    ...SCENE_LIBRARY.slice(0, currentIndex),
+  ];
+  const next = orderedCandidates.find(scene => getSceneStatus(scene.id, ageBand) === "unstarted");
+  if (!next) {
+    updateProgress();
+    showToast(`${LABELS.age_band[ageBand]} 下 ${SCENE_LIBRARY.length} 个场景都已有记录`);
+    openSceneLibrary("all");
+    return;
+  }
+  startScene(next);
+  showToast(`上一条已完成，已切换到 ${next.id}`);
+}
+
+async function copyJson() {
+  const text = JSON.stringify(buildSample(), null, 2);
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand("copy");
+    textarea.remove();
+  }
+  showToast("JSON 已复制到剪贴板");
+}
+
+function findSceneForSample(sample) {
+  const sourceText = `${sample.sample_id || ""} ${sample.authoring?.notes || ""}`;
+  const sceneRef = sourceText.match(/scene\/([a-z0-9][a-z0-9_-]{2,63})/i);
+  if (sceneRef) return getSceneById(sceneRef[1].toLowerCase());
+  const match = sourceText.match(/(?:core[_-])?event[_-](\d{3})/i);
+  return match
+    ? getSceneById(`event-${match[1]}`)
+    : null;
+}
+
+function applySampleObject(sample) {
+  const allowedScenes = Object.keys(LABELS.scene);
+  const ageBand = AGE_RANGE[sample.age_band] ? sample.age_band : "workplace";
+  isHydrating = true;
+  document.getElementById("sample_id").value = sample.sample_id || "";
+  document.getElementById("revision").value = Number(sample.revision) || 1;
+  refreshSceneOptions();
+  document.getElementById("scene_type").value = allowedScenes.includes(sample.scene_type)
+    ? sample.scene_type
+    : allowedScenes[0];
+  document.getElementById("age_band").value = ageBand;
+  const [minAge, maxAge] = AGE_RANGE[ageBand];
+  const importedAge = Number(sample.specific_age);
+  document.getElementById("specific_age").value =
+    importedAge >= minAge && importedAge <= maxAge ? importedAge : minAge;
+  syncAgeContextControls(ageBand);
+  document.getElementById("emotion_valence").value = LABELS.emotion_valence[sample.emotion_valence]
+    ? sample.emotion_valence
+    : "negative";
+  history = Array.isArray(sample.history)
+    ? sample.history
+        .filter(turn => turn && ["user", "supporter"].includes(turn.role))
+        .slice(0, 12)
+        .map(turn => ({ role: turn.role, content: String(turn.content || "") }))
+    : createEmptyHistory(7);
+  if (history.length >= 6 && history.length <= 12) {
+    document.getElementById("turnCountTemplate").value = String(history.length);
+  }
+  Object.assign(authoringState, defaultAuthoringState(), {
+    situation_summary: sample.authoring?.situation_summary || "",
+    context_dependencies: sample.authoring?.context_dependencies?.length
+      ? sample.authoring.context_dependencies
+      : defaultAuthoringState().context_dependencies,
+    valid_response_directions: sample.authoring?.valid_response_directions?.length
+      ? sample.authoring.valid_response_directions
+      : defaultAuthoringState().valid_response_directions,
+    forbidden_response_patterns: sample.authoring?.forbidden_response_patterns?.length
+      ? sample.authoring.forbidden_response_patterns
+      : defaultAuthoringState().forbidden_response_patterns,
+    human_only: !!sample.authoring?.human_only,
+    review_status: LABELS.review_status[sample.authoring?.review_status]
+      ? sample.authoring.review_status
+      : "draft",
+    notes: sample.authoring?.notes || "",
+  });
+  applyRedlineLocks();
+  refreshAll();
+  isHydrating = false;
+}
+
+function importJson(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const s = JSON.parse(reader.result);
+      selectedScene = findSceneForSample(s);
+      applySampleObject(s);
+      renderSelectedScene();
+      if (selectedScene) persistCurrent("draft", false);
+      showToast("JSON 已导入");
+    } catch (e) {
+      alert("JSON 解析失败：" + e.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// wire events
+workspaceRecords = readWorkspace();
+SCENE_LIBRARY = readSceneLibrary();
+initStaticSelects();
+fillAgeContextSelects();
+initializeSceneFilters();
+[
+  "sample_id", "revision", "scene_type", "age_band", "specific_age", "emotion_valence"
+].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener("change", () => {
+    if (id === "scene_type") applyRedlineLocks();
+    if (id === "age_band") {
+      setAuthoringAgeBand(el.value, true);
+      updateProgress();
+      renderSceneLibrary();
+      refreshCoverageIfOpen();
+    }
+    updatePreview();
+    queueAutosave();
+  });
+  el.addEventListener("input", () => {
+    updatePreview();
+    queueAutosave();
+  });
+});
+
+document.getElementById("btnSeedTurns").onclick = () => seedTurns(false);
+document.getElementById("btnExample").onclick = loadExample;
+document.getElementById("btnReset").onclick = resetAll;
+document.getElementById("btnExport").onclick = exportJson;
+document.getElementById("btnExportAll").onclick = exportCompletedJsonl;
+document.getElementById("btnCopy").onclick = copyJson;
+document.getElementById("btnSaveDraft").onclick = () => persistCurrent("draft", true);
+document.getElementById("btnCompleteNext").onclick = completeAndNext;
+document.getElementById("btnSceneLibrary").onclick = () => openSceneLibrary("all");
+document.getElementById("btnCoverage").onclick = openCoverageView;
+document.getElementById("btnCoverageFromLibrary").onclick = openCoverageView;
+document.getElementById("btnCoverageRefresh").onclick = renderCoverageView;
+document.getElementById("btnCoverageClearSelection").onclick = () => {
+  coverageSelection = null;
+  renderCoverageView();
+};
+document.getElementById("coverageSearch").addEventListener("input", event => {
+  setCoverageFilters({ query: event.target.value });
+});
+document.getElementById("coverageAgeContext").addEventListener("change", event => {
+  setAuthoringAgeBand(event.target.value, true);
+  updatePreview();
+  queueAutosave();
+  renderCoverageView();
+});
+document.getElementById("coverageStatusFilter").addEventListener("change", event => {
+  setCoverageFilters({ status: event.target.value });
+});
+document.getElementById("btnCoverageClearFilters").onclick = () => {
+  setCoverageFilters({ query: "", status: "all" });
+};
+document.getElementById("btnCoverageOpenLibrary").onclick = () => {
+  closeCoverageView();
+  openSceneLibrary("all");
+};
+document.getElementById("btnCloseCoverage").onclick = closeCoverageView;
+document.getElementById("btnChangeScene").onclick = () => openSceneLibrary("all");
+document.getElementById("btnDrafts").onclick = () => openSceneLibrary("draft");
+document.getElementById("btnCloseSceneLibrary").onclick = closeSceneLibrary;
+document.getElementById("btnNewScene").onclick = () => openSceneEditor();
+document.getElementById("btnResetSceneLibrary").onclick = resetSceneLibraryToDefault;
+document.getElementById("btnCancelSceneEdit").onclick = closeSceneEditor;
+document.getElementById("sceneEditor").addEventListener("submit", saveSceneFromEditor);
+document.getElementById("btnResetSceneFilters").onclick = () => {
+  document.getElementById("sceneSearch").value = "";
+  document.getElementById("sceneCategoryFilter").value = "all";
+  document.getElementById("sceneStatusFilter").value = "all";
+  renderSceneLibrary();
+};
+document.getElementById("sceneAgeContext").addEventListener("change", event => {
+  setAuthoringAgeBand(event.target.value, true);
+  updatePreview();
+  queueAutosave();
+  updateProgress();
+  renderSceneLibrary();
+  refreshCoverageIfOpen();
+});
+["sceneSearch", "sceneCategoryFilter", "sceneStatusFilter"].forEach(id => {
+  const element = document.getElementById(id);
+  element.addEventListener(id === "sceneSearch" ? "input" : "change", renderSceneLibrary);
+});
+document.getElementById("sceneOverlay").addEventListener("click", event => {
+  if (event.target.id === "sceneOverlay") closeSceneLibrary();
+});
+document.getElementById("coverageOverlay").addEventListener("click", event => {
+  if (event.target.id === "coverageOverlay") closeCoverageView();
+});
+window.addEventListener("resize", () => {
+  if (!isCoverageOpen()) return;
+  clearTimeout(coverageResizeTimer);
+  coverageResizeTimer = setTimeout(renderCoverageView, 120);
+});
+document.addEventListener("keydown", event => {
+  if (event.key !== "Escape") return;
+  if (isCoverageOpen()) {
+    closeCoverageView();
+    return;
+  }
+  closeSceneLibrary();
+});
+document.getElementById("importFile").onchange = e => {
+  const f = e.target.files?.[0];
+  if (f) importJson(f);
+  e.target.value = "";
+};
+refreshSceneOptions();
+applyAgeHint();
+resetAll(false);
+updateProgress();
+renderSceneLibrary();
+openSceneLibrary("all");
+</script>
+</body>
+</html>

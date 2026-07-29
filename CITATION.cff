@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+title: "星伴千境（StarCompanion-CN）"
+message: "若使用本数据集，请按如下方式引用。"
+type: dataset
+authors:
+  - name: "AI情感陪伴数据集贡献者"
+abstract: >-
+  面向 3–35 岁中文用户的多轮情感陪伴评测数据集。
+  样本为有前文、无标准答案的半开放考题，考点是「接住」而非讲道理。
+repository-code: "https://github.com/smoothshark/StarCompanion-CN"
+url: "https://github.com/smoothshark/StarCompanion-CN"
+keywords:
+  - emotional companion
+  - dialogue evaluation
+  - Chinese
+  - multi-turn
+license: CC-BY-4.0
+version: "0.1.0"
+date-released: "2026-07-29"
