@@ -6,7 +6,7 @@
 
 | 你是谁 | 先看哪里 | 用来做什么 |
 |---|---|---|
-| 产品 / 内容审核 | [`app/`](app/) | 搜索场景、审查机器稿、修改并确认卡片 |
+| 产品 / 内容审核 | [`app/`](app/) | 编辑 LLM 记忆和多轮对话，使用 LLM 生成修改建议 |
 | 数据产品 | [`data/`](data/) | 查看场景源、正式发布数据和基础事件源 |
 | 开发 | [`scripts/`](scripts/) | 启动页面、生成数据、续跑批次、执行审计 |
 | 模型 / 评测开发 | [`schema/`](schema/) | 对接单条样本字段和 JSON Schema |
@@ -23,19 +23,29 @@ node scripts/dev-server.mjs
 
 然后打开终端显示的地址，默认是 <http://127.0.0.1:8787/>。
 
-页面显示“已连接仓库 JSON”时，场景库修改会写入
-[`data/scenes/scene_library.json`](data/scenes/scene_library.json)。待审卡片会从
+页面显示“已连接 SQLite”时，记忆和对话修改会写入
+`workspace/authoring.sqlite` 并产生版本快照。首次启动会从
+[`data/scenes/scene_library.json`](data/scenes/scene_library.json) 导入场景，并从
 [`app/assets/pending-review.generated.js`](app/assets/pending-review.generated.js)
-加载。
+导入 AI 待审卡片。
 
-> 不建议直接双击 `app/index.html` 修改数据。`file://` 模式下的改动只保存在当前浏览器，不会写回仓库。
+多人协作部署时可以指定监听地址和数据库路径：
+
+```bash
+HOST=0.0.0.0 PORT=8787 AUTHORING_DB_PATH=/srv/starcompanion/authoring.sqlite node scripts/dev-server.mjs
+```
+
+页面不做登录；每位修改者需要在顶部填写“修改人”名称。每次保存都会记录修改人和完整快照。
+
+> 极简页面依赖本地 API，不能直接双击 `app/index.html` 使用。场景管理、覆盖统计、组合筛选、批量生成和发布导出已从前端移除。
 
 ## 数据边界
 
 | 区域 | 当前内容 | 是否正式发布 |
 |---|---:|---|
 | `data/scenes/` | 561 个原子事件，每条带适用年龄约束 | 是，场景资产 |
-| `app/assets/pending-review.generated.js` | 2,509 张机器生成待审卡片 | 否，必须人审 |
+| `workspace/authoring.sqlite` | 协作中的待审、草稿、确认稿和版本记录 | 否，服务器工作库 |
+| `app/assets/pending-review.generated.js` | 2,509 张机器生成待审卡片，作为首次建库种子 | 否，必须人审 |
 | `workspace/review/` | 待审卡片的 JSONL 工作导出 | 否，可重建 |
 | `data/releases/` | 已整理进版本文件的对话样本 | 是，按版本发布 |
 
